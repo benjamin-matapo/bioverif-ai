@@ -1,41 +1,18 @@
-import { NextResponse } from "next/server";
+export const runtime = "nodejs";
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import stringSimilarity from "string-similarity";
+import { NextResponse } from "next/server";
 
 import { BIOMED_QUESTIONS } from "@/lib/biomed-data";
 
-// Ensure this route runs on the Node.js runtime so that the Google Generative AI
-// SDK and other Node-only dependencies work correctly.
-export const runtime = "nodejs";
-
 export async function POST(request: Request) {
   try {
-    // Simple runtime check to verify that the environment variable is visible.
-    // This logs only a boolean to avoid leaking the actual API key.
+    // Log presence of the API key without exposing its value.
     // eslint-disable-next-line no-console
     console.log("API Key present:", !!process.env.GEMINI_API_KEY);
 
-    const body = await request.json().catch(() => null);
-
-    if (!body || typeof body.questionId !== "string") {
-      return NextResponse.json(
-        { error: "Invalid request body. Expected { questionId: string }." },
-        { status: 400 },
-      );
-    }
-
-    const { questionId } = body;
-    const question = BIOMED_QUESTIONS.find((q) => q.id === questionId);
-
-    if (!question) {
-      return NextResponse.json(
-        { error: `Question with id '${questionId}' not found.` },
-        { status: 404 },
-      );
-    }
-
     const apiKey = process.env.GEMINI_API_KEY;
-
     if (!apiKey) {
       return NextResponse.json(
         {
@@ -46,17 +23,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use the v1 API, which exposes gemini-1.5-flash for generateContent.
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body.questionId !== "string") {
+      return NextResponse.json(
+        { error: "Invalid request body. Expected { questionId: string }." },
+        { status: 400 },
+      );
+    }
+
+    const { questionId } = body;
+    const question = BIOMED_QUESTIONS.find((q) => q.id === questionId);
+    if (!question) {
+      return NextResponse.json(
+        { error: `Question with id '${questionId}' not found.` },
+        { status: 404 },
+      );
+    }
+
     const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1" });
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const systemPrompt =
       "You are an expert biomedical scientist with a PhD-level understanding of molecular biology, biochemistry, genetics, and physiology. Answer the following question with scientific precision, using correct terminology. Provide a comprehensive answer in 150-200 words:";
 
     const prompt = `${systemPrompt} ${question.question}`;
-
     const result = await model.generateContent(prompt);
     const response = result.response;
     const geminiAnswer = (response?.text() ?? "").trim();
@@ -114,15 +104,8 @@ export async function POST(request: Request) {
     console.error("Error in /api/benchmark:", error);
 
     const message =
-      error instanceof Error && error.message
-        ? error.message
-        : "An unexpected error occurred. Please try again.";
+      error instanceof Error ? error.message : String(error ?? "Unknown error");
 
-    return NextResponse.json(
-      {
-        error: message,
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

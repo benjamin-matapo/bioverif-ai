@@ -2,10 +2,7 @@ import { type BenchmarkResult } from "@/types/benchmark";
 import { AccuracyBar } from "./AccuracyBar";
 import { ScoreBadge } from "./ScoreBadge";
 
-const difficultyColors: Record<
-  BenchmarkResult["difficulty"],
-  string
-> = {
+const difficultyColors: Record<BenchmarkResult["difficulty"], string> = {
   Undergraduate: "bg-emerald-50 text-emerald-700 border-emerald-200",
   Postgraduate: "bg-sky-50 text-sky-700 border-sky-200",
   Expert: "bg-purple-50 text-purple-700 border-purple-200",
@@ -35,8 +32,7 @@ export function BenchmarkCard({ result }: BenchmarkCardProps) {
     <article className="group relative transform rounded-xl border border-slate-200 bg-white shadow-md transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-lg">
       <div className="absolute inset-0 -z-10 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-40 group-hover:bg-emerald-100" />
 
-      <div className="flex flex-col gap-4 p-6 opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]">
-        {/* Header */}
+      <div className="flex flex-col gap-4 p-6 opacity-0 translate-y-2 animate-[fadeInUp_0.5s_ease-out_forwards]">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-[#002244] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
@@ -55,7 +51,6 @@ export function BenchmarkCard({ result }: BenchmarkCardProps) {
           {question}
         </h3>
 
-        {/* Comparison panel */}
         <section className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
             <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
@@ -82,19 +77,14 @@ export function BenchmarkCard({ result }: BenchmarkCardProps) {
           </div>
         </section>
 
-        {/* Scores */}
         <section className="grid gap-4 md:grid-cols-2">
           <AccuracyBar
             score={similarityScore}
             label="Similarity Score (string similarity)"
           />
-          <AccuracyBar
-            score={keyTermScore}
-            label="Key Term Coverage"
-          />
+          <AccuracyBar score={keyTermScore} label="Key Term Coverage" />
         </section>
 
-        {/* Key terms */}
         <section className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-sm font-semibold text-slate-800">
@@ -148,12 +138,5 @@ export function BenchmarkCard({ result }: BenchmarkCardProps) {
       </div>
     </article>
   );
-}
-
-declare global {
-  // Tailwind keyframes helper for the fade-in animation
-  // This is purely for type safety when using the custom animation string.
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface HTMLElementTagNameMap {}
 }
 

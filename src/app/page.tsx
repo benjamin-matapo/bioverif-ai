@@ -38,8 +38,8 @@ async function runBenchmark(questionId: string): Promise<BenchmarkResult> {
 }
 
 export default function Home() {
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string>(
-    BIOMED_QUESTIONS[0]?.id ?? "",
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
+    null,
   );
   const [results, setResults] = useState<BenchmarkResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +80,7 @@ export default function Home() {
         return [result, ...filtered];
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error occurred");
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
     }
@@ -91,19 +91,22 @@ export default function Home() {
     setError(null);
     try {
       const allIds = BIOMED_QUESTIONS.map((q) => q.id);
-      const responses: BenchmarkResult[] = [];
 
       for (const id of allIds) {
-        // Run sequentially to avoid overwhelming the API/model.
-        // For small datasets this is acceptable and easier to reason about.
+        // Run sequentially with a short delay to avoid rate limiting.
         // eslint-disable-next-line no-await-in-loop
         const result = await runBenchmark(id);
-        responses.push(result);
+        setResults((prev) => {
+          const filtered = prev.filter(
+            (existing) => existing.questionId !== result.questionId,
+          );
+          return [...filtered, result];
+        });
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
-
-      setResults(responses);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error occurred");
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
     }
@@ -201,15 +204,15 @@ export default function Home() {
               <p className="text-xs font-medium uppercase tracking-wide text-slate-600">
                 Benchmark Scenario
               </p>
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {BIOMED_QUESTIONS.map((q) => {
                   const isSelected = q.id === selectedQuestionId;
                   const baseClasses =
-                    "flex h-full flex-col items-start justify-start rounded-xl border-2 p-4 text-left text-sm transition-all duration-150 cursor-pointer";
+                    "flex h-full flex-col items-start justify-start rounded-xl border p-4 text-left text-sm transition-all duration-150 cursor-pointer";
                   const selectedClasses =
-                    "border-[#002244] bg-blue-50 shadow-md ring-2 ring-[#002244]";
+                    "border-2 border-[#002244] bg-blue-50 ring-2 ring-[#002244]";
                   const unselectedClasses =
-                    "border-slate-200 bg-white hover:border-slate-400 hover:shadow-sm";
+                    "border-slate-200 bg-white hover:shadow-md";
 
                   let difficultyColor =
                     "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold";
@@ -233,10 +236,10 @@ export default function Home() {
                         isSelected ? selectedClasses : unselectedClasses
                       }`}
                     >
-                      <span className="text-xs font-semibold uppercase tracking-wide text-[#002244]">
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#002244]">
                         {q.category}
                       </span>
-                      <span className={`mt-1 ${difficultyColor}`}>
+                      <span className={`mt-2 ${difficultyColor}`}>
                         {q.difficulty}
                       </span>
                       <p className="mt-2 text-sm text-slate-700">
@@ -248,23 +251,39 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-[1.2fr,1fr]">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={handleRunAll}
                 disabled={isLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#002244] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#022e5a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-500"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#002244] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#022e5a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-500"
               >
-                <BeakerIcon className="h-4 w-4" />
-                <span>Run All Benchmarks</span>
+                {isLoading ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-transparent" />
+                    <span>Running...</span>
+                  </>
+                ) : (
+                  <>
+                    <BeakerIcon className="h-4 w-4" />
+                    <span>Run All Benchmarks</span>
+                  </>
+                )}
               </button>
               <button
                 type="button"
                 onClick={handleRunSelected}
                 disabled={isLoading || !selectedQuestionId}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-[#002244] hover:text-[#002244] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#002244] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#022e5a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-500"
               >
-                <span>Run Selected</span>
+                {isLoading ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-transparent" />
+                    <span>Running...</span>
+                  </>
+                ) : (
+                  <span>Run Selected</span>
+                )}
               </button>
             </div>
 
@@ -292,7 +311,7 @@ export default function Home() {
                 <DnaIcon className="h-7 w-7" />
               </div>
               <h3 className="mt-4 text-base font-semibold text-slate-900">
-                Run a benchmark to see results
+                Select a scenario and run a benchmark to see results
               </h3>
               <p className="mt-2 max-w-md text-sm text-slate-600">
                 Select a biomedical scenario and compare Gemini&apos;s answer

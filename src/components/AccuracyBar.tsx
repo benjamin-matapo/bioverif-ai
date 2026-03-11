@@ -1,21 +1,16 @@
 interface AccuracyBarProps {
   score: number;
   label: string;
-  color?: string;
 }
 
-export function AccuracyBar({ score, label, color }: AccuracyBarProps) {
+export function AccuracyBar({ score, label }: AccuracyBarProps) {
   const clampedScore = Math.min(100, Math.max(0, score));
 
-  let barColor = "#ef4444"; // red
+  let barColor = "#ef4444";
   if (clampedScore >= 75) {
-    barColor = "#10b981"; // green
+    barColor = "#10b981";
   } else if (clampedScore >= 50) {
-    barColor = "#f59e0b"; // amber
-  }
-
-  if (color) {
-    barColor = color;
+    barColor = "#f59e0b";
   }
 
   return (

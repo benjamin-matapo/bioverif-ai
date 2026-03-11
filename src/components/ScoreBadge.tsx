@@ -26,9 +26,11 @@ export function ScoreBadge({ score, size = "sm" }: ScoreBadgeProps) {
       <div className={`${circleClasses} ${colorClass}`}>
         <span>{clampedScore}%</span>
       </div>
-      <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        Similarity Score
-      </span>
+      {size === "lg" && (
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Similarity
+        </span>
+      )}
     </div>
   );
 }

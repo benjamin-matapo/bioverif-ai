@@ -9,7 +9,7 @@ export interface BiomedQuestion {
 
 export const BIOMED_QUESTIONS: BiomedQuestion[] = [
   {
-    id: "dna-replication-fidelity",
+    id: "dna-replication",
     category: "Molecular Biology",
     difficulty: "Postgraduate",
     question:
@@ -29,7 +29,7 @@ export const BIOMED_QUESTIONS: BiomedQuestion[] = [
     ],
   },
   {
-    id: "krebs-cycle-regulation",
+    id: "krebs-cycle",
     category: "Biochemistry",
     difficulty: "Undergraduate",
     question:
@@ -48,7 +48,7 @@ export const BIOMED_QUESTIONS: BiomedQuestion[] = [
     ],
   },
   {
-    id: "crispr-cas9-mechanism",
+    id: "crispr-cas9",
     category: "Genomics & Gene Editing",
     difficulty: "Expert",
     question:
@@ -91,7 +91,7 @@ export const BIOMED_QUESTIONS: BiomedQuestion[] = [
     ],
   },
   {
-    id: "antibody-structure-function",
+    id: "antibody-diversity",
     category: "Immunology",
     difficulty: "Expert",
     question:
