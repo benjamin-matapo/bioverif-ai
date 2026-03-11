@@ -1,23 +1,18 @@
 export const runtime = "nodejs";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import stringSimilarity from "string-similarity";
 import { NextResponse } from "next/server";
-
 import { BIOMED_QUESTIONS } from "@/lib/biomed-data";
+import { evaluateResponse } from "@/lib/evaluate";
 
 export async function POST(request: Request) {
   try {
-    // Log presence of the API key without exposing its value.
-    // eslint-disable-next-line no-console
-    console.log("API Key present:", !!process.env.GEMINI_API_KEY);
-
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
         {
           error:
-            "GEMINI_API_KEY is not configured. Please add it to your .env.local file and restart the dev server.",
+            "GEMINI_API_KEY is not configured. Add it to .env.local and restart the dev server.",
         },
         { status: 500 },
       );
@@ -35,80 +30,61 @@ export async function POST(request: Request) {
     const question = BIOMED_QUESTIONS.find((q) => q.id === questionId);
     if (!question) {
       return NextResponse.json(
-        { error: `Question with id '${questionId}' not found.` },
+        { error: `Question with id "${questionId}" not found.` },
         { status: 404 },
       );
     }
 
-    const genAI = new GoogleGenerativeAI({
-      apiKey,
-      apiVersion: "v1",
-    });
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const systemPrompt =
-      "You are an expert biomedical scientist with a PhD-level understanding of molecular biology, biochemistry, genetics, and physiology. Answer the following question with scientific precision, using correct terminology. Provide a comprehensive answer in 150-200 words:";
+    const prompt = `You are an expert biomedical scientist with a PhD-level understanding of molecular biology, biochemistry, genetics, and physiology. Answer the following question with scientific precision, using correct terminology. Provide a comprehensive answer in 150-200 words: ${question.question}`;
 
-    const prompt = `${systemPrompt} ${question.question}`;
     const result = await model.generateContent(prompt);
-    const response = result.response;
-    const geminiAnswer = (response?.text() ?? "").trim();
+    const geminiAnswer = (result.response?.text() ?? "").trim();
 
     if (!geminiAnswer) {
       return NextResponse.json(
-        { error: "No answer returned from Gemini model." },
+        { error: "No answer returned from Gemini. Please try again." },
         { status: 502 },
       );
     }
 
-    const groundTruthLower = question.groundTruth.toLowerCase();
-    const geminiLower = geminiAnswer.toLowerCase();
-
-    const similarityRaw = stringSimilarity.compareTwoStrings(
-      geminiLower,
-      groundTruthLower,
-    );
-    const similarityScore = Math.round(similarityRaw * 100);
-
-    const keyTermsFound: string[] = [];
-    const keyTermsMissed: string[] = [];
-
-    for (const term of question.keyTerms) {
-      const termLower = term.toLowerCase();
-      if (geminiLower.includes(termLower)) {
-        keyTermsFound.push(term);
-      } else {
-        keyTermsMissed.push(term);
-      }
-    }
-
-    const keyTermScore =
-      question.keyTerms.length === 0
-        ? 0
-        : Math.round((keyTermsFound.length / question.keyTerms.length) * 100);
-
-    const payload = {
-      questionId: question.id,
-      question: question.question,
-      geminiAnswer,
-      groundTruth: question.groundTruth,
+    const {
       similarityScore,
       keyTermsFound,
       keyTermsMissed,
       keyTermScore,
-      category: question.category,
-      difficulty: question.difficulty,
-      timestamp: new Date().toISOString(),
-    };
+    } = evaluateResponse(
+      geminiAnswer,
+      question.groundTruth,
+      question.keyTerms,
+    );
 
-    return NextResponse.json(payload, { status: 200 });
+    return NextResponse.json(
+      {
+        questionId: question.id,
+        question: question.question,
+        geminiAnswer,
+        groundTruth: question.groundTruth,
+        similarityScore,
+        keyTermsFound,
+        keyTermsMissed,
+        keyTermScore,
+        category: question.category,
+        difficulty: question.difficulty,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 200 },
+    );
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error("Error in /api/benchmark:", error);
-
-    const message =
-      error instanceof Error ? error.message : String(error ?? "Unknown error");
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Unexpected error occurred.",
+      },
+      { status: 500 },
+    );
   }
 }
