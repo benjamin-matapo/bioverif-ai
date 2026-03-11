@@ -4,8 +4,17 @@ import stringSimilarity from "string-similarity";
 
 import { BIOMED_QUESTIONS } from "@/lib/biomed-data";
 
+// Ensure this route runs on the Node.js runtime so that the Google Generative AI
+// SDK and other Node-only dependencies work correctly.
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
+    // Simple runtime check to verify that the environment variable is visible.
+    // This logs only a boolean to avoid leaking the actual API key.
+    // eslint-disable-next-line no-console
+    console.log("API Key present:", !!process.env.GEMINI_API_KEY);
+
     const body = await request.json().catch(() => null);
 
     if (!body || typeof body.questionId !== "string") {
@@ -31,14 +40,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "GEMINI_API_KEY is not configured. Please add it to your environment.",
+            "GEMINI_API_KEY is not configured. Please add it to your .env.local file and restart the dev server.",
         },
         { status: 500 },
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Use the v1 API, which exposes gemini-1.5-flash for generateContent.
+    const genAI = new GoogleGenerativeAI(apiKey, { apiVersion: "v1" });
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+    });
 
     const systemPrompt =
       "You are an expert biomedical scientist with a PhD-level understanding of molecular biology, biochemistry, genetics, and physiology. Answer the following question with scientific precision, using correct terminology. Provide a comprehensive answer in 150-200 words:";
@@ -98,14 +110,19 @@ export async function POST(request: Request) {
 
     return NextResponse.json(payload, { status: 200 });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error in /api/benchmark:", error);
+
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "An unexpected error occurred. Please try again.";
+
     return NextResponse.json(
       {
-        error:
-          "An unexpected error occurred while running the benchmark. Please try again.",
+        error: message,
       },
       { status: 500 },
     );
   }
 }
-

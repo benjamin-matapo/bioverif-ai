@@ -155,7 +155,7 @@ export default function Home() {
                 Newcastle University | Biomedical AI Research
               </p>
               <p className="text-[11px] text-slate-300">
-                Experimental benchmarking dashboard &mdash; not for clinical use
+                Experimental benchmarking dashboard - not for clinical use
               </p>
             </div>
           </div>
@@ -198,26 +198,54 @@ export default function Home() {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label
-                htmlFor="question-select"
-                className="block text-xs font-medium uppercase tracking-wide text-slate-600"
-              >
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-600">
                 Benchmark Scenario
-              </label>
-              <select
-                id="question-select"
-                value={selectedQuestionId}
-                onChange={(e) => setSelectedQuestionId(e.target.value)}
-                className="block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
-              >
-                {BIOMED_QUESTIONS.map((q) => (
-                  <option key={q.id} value={q.id}>
-                    {q.category} — {q.difficulty} —{" "}
-                    {q.question.slice(0, 60)}
-                    {q.question.length > 60 ? "…" : ""}
-                  </option>
-                ))}
-              </select>
+              </p>
+              <div className="flex flex-col gap-3">
+                {BIOMED_QUESTIONS.map((q) => {
+                  const isSelected = q.id === selectedQuestionId;
+                  const baseClasses =
+                    "flex h-full flex-col items-start justify-start rounded-xl border-2 p-4 text-left text-sm transition-all duration-150 cursor-pointer";
+                  const selectedClasses =
+                    "border-[#002244] bg-blue-50 shadow-md ring-2 ring-[#002244]";
+                  const unselectedClasses =
+                    "border-slate-200 bg-white hover:border-slate-400 hover:shadow-sm";
+
+                  let difficultyColor =
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold";
+                  if (q.difficulty === "Undergraduate") {
+                    difficultyColor +=
+                      " bg-blue-50 text-blue-700 border border-blue-200";
+                  } else if (q.difficulty === "Postgraduate") {
+                    difficultyColor +=
+                      " bg-amber-50 text-amber-800 border border-amber-200";
+                  } else {
+                    difficultyColor +=
+                      " bg-rose-50 text-rose-800 border border-rose-200";
+                  }
+
+                  return (
+                    <button
+                      key={q.id}
+                      type="button"
+                      onClick={() => setSelectedQuestionId(q.id)}
+                      className={`${baseClasses} ${
+                        isSelected ? selectedClasses : unselectedClasses
+                      }`}
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-wide text-[#002244]">
+                        {q.category}
+                      </span>
+                      <span className={`mt-1 ${difficultyColor}`}>
+                        {q.difficulty}
+                      </span>
+                      <p className="mt-2 text-sm text-slate-700">
+                        {q.question}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-[1.2fr,1fr]">
@@ -335,8 +363,7 @@ export default function Home() {
       <footer className="border-t border-slate-200 bg-white/90">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Built with Next.js &amp; Google Gemini | Academic Research Tool |
-            Not for Clinical Use
+            Built with Next.js &amp; Google Gemini | Academic Research Tool | Not for Clinical Use
           </p>
           <p className="text-[11px]">
             Outputs are for educational and research purposes only and must not
