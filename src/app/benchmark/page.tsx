@@ -1,132 +1,89 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { BeakerIcon, FlaskConicalIcon, AlertTriangle } from "lucide-react";
+import { FlaskConical, Play, RotateCcw, AlertTriangle } from "lucide-react";
+import { BENCHMARK_DATASET } from "@/lib/dataset";
+import { runBenchmark, BenchmarkResult } from "@/lib/benchmarkEvaluation";
+import BenchmarkResultCard from "@/components/BenchmarkResultCard";
 import { Navbar } from "@/components/Navbar";
-import { BIOMED_QUESTIONS } from "@/lib/biomed-data";
-import type { BenchmarkResult } from "@/types/benchmark";
-import { BenchmarkCard } from "@/components/BenchmarkCard";
-
-type ApiErrorResponse = { error: string };
-
-async function runBenchmark(
-  questionId: string,
-): Promise<BenchmarkResult> {
-  const res = await fetch("/api/benchmark", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ questionId }),
-  });
-
-  const data = (await res.json()) as BenchmarkResult | ApiErrorResponse;
-
-  if (!res.ok) {
-    const message =
-      "error" in data && typeof data.error === "string"
-        ? data.error
-        : "Failed to run benchmark. Please try again.";
-    throw new Error(message);
-  }
-
-  return data as BenchmarkResult;
-}
 
 export default function BenchmarkPage() {
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
-    null,
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string>(
+    BENCHMARK_DATASET[0].id
   );
   const [results, setResults] = useState<BenchmarkResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [hasRun, setHasRun] = useState(false);
 
-  const summary = useMemo(() => {
-    if (results.length === 0) {
-      return {
-        averageSimilarity: 0,
-        averageKeyTerms: 0,
-        testsRun: 0,
-      };
-    }
-    const totalSimilarity = results.reduce(
-      (acc, r) => acc + r.similarityScore,
-      0,
-    );
-    const totalKeyTerms = results.reduce((acc, r) => acc + r.keyTermScore, 0);
-    return {
-      averageSimilarity: Math.round(totalSimilarity / results.length),
-      averageKeyTerms: Math.round(totalKeyTerms / results.length),
-      testsRun: results.length,
-    };
-  }, [results]);
+  const selectedScenario = BENCHMARK_DATASET.find(
+    (scenario) => scenario.id === selectedScenarioId
+  );
 
-  const handleRunSelected = async () => {
-    if (!selectedQuestionId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const result = await runBenchmark(selectedQuestionId);
-      setResults((prev) => {
-        const filtered = prev.filter(
-          (r) => r.questionId !== result.questionId,
-        );
-        return [result, ...filtered];
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRunBenchmark = async () => {
+    if (!selectedScenario) return;
+
+    setIsRunning(true);
+    setHasRun(false);
+    setResults([]);
+
+    // Simulate loading delay
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    const benchmarkResults: BenchmarkResult[] = [
+      runBenchmark(
+        "ChatGPT",
+        selectedScenario.modelResponses.chatgpt,
+        selectedScenario.groundTruth,
+        selectedScenario.keyTerms
+      ),
+      runBenchmark(
+        "Gemini",
+        selectedScenario.modelResponses.gemini,
+        selectedScenario.groundTruth,
+        selectedScenario.keyTerms
+      ),
+      runBenchmark(
+        "Claude",
+        selectedScenario.modelResponses.claude,
+        selectedScenario.groundTruth,
+        selectedScenario.keyTerms
+      ),
+    ];
+
+    setResults(benchmarkResults);
+    setIsRunning(false);
+    setHasRun(true);
   };
 
-  const handleRunAll = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const allIds = BIOMED_QUESTIONS.map((q) => q.id);
-      for (const id of allIds) {
-        const result = await runBenchmark(id);
-        setResults((prev) => {
-          const filtered = prev.filter(
-            (existing) => existing.questionId !== result.questionId,
-          );
-          return [...filtered, result];
-        });
-        await new Promise((r) => setTimeout(r, 500));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsLoading(false);
-    }
+  const handleReset = () => {
+    setResults([]);
+    setHasRun(false);
   };
 
-  const handleExportJson = () => {
-    if (results.length === 0) return;
-    const blob = new Blob([JSON.stringify(results, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `bioverif-benchmark-results-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  const highestScore = results.length > 0 
+    ? Math.max(...results.map(r => r.finalScore))
+    : 0;
+
+  const highestScoreModel = results.length > 0
+    ? results.find(r => r.finalScore === highestScore)?.modelName
+    : "";
+
+  const averageScore = results.length > 0
+    ? Math.round(results.reduce((sum, r) => sum + r.finalScore, 0) / results.length)
+    : 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />
 
-      <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
+      {/* Warning Banner */}
+      <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-amber-900">
             <AlertTriangle className="h-5 w-5 shrink-0" />
             <p className="text-sm font-medium">
-              Auto-Benchmark Beta - This page calls Gemini directly via API. For
-              manual multi-AI comparison, use the Evaluator.
+              Auto-Benchmark Mode - All responses are pre-stored for reproducibility. No AI APIs are called.
             </p>
           </div>
           <Link
@@ -138,162 +95,129 @@ export default function BenchmarkPage() {
         </div>
       </div>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        {error && (
-          <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            <p className="flex-1">{error}</p>
-            <button
-              type="button"
-              onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Select Benchmark Test
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Choose a biomedical domain and run Gemini against expert
-              ground-truth explanations.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {BIOMED_QUESTIONS.map((q) => {
-                const isSelected = q.id === selectedQuestionId;
-                const diffClass =
-                  q.difficulty === "Undergraduate"
-                    ? "bg-blue-100 text-blue-700"
-                    : q.difficulty === "Postgraduate"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-rose-100 text-rose-700";
-                return (
-                  <button
-                    key={q.id}
-                    type="button"
-                    onClick={() => setSelectedQuestionId(q.id)}
-                    className={`flex flex-col items-start rounded-xl border p-4 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2 ${
-                      isSelected
-                        ? "border-2 border-[#002244] bg-blue-50 ring-2 ring-[#002244]"
-                        : "border-slate-200 bg-white hover:shadow-md"
-                    }`}
-                  >
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#002244]">
-                      {q.category}
-                    </span>
-                    <span
-                      className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${diffClass}`}
-                    >
-                      {q.difficulty}
-                    </span>
-                    <p className="mt-2 text-sm text-slate-700">{q.question}</p>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+        {/* Section 1 - Scenario Selector */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold text-[#002244] mb-4">
+            Select Benchmark Scenario
+          </h2>
+          
+          {/* Horizontal scrollable row of scenario pills */}
+          <div className="flex gap-3 overflow-x-auto pb-2 mb-4">
+            {BENCHMARK_DATASET.map((scenario) => (
               <button
-                type="button"
-                onClick={handleRunAll}
-                disabled={isLoading}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#002244] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2"
+                key={scenario.id}
+                onClick={() => setSelectedScenarioId(scenario.id)}
+                className={`rounded-full px-4 py-2 text-sm cursor-pointer transition-all whitespace-nowrap ${
+                  selectedScenarioId === scenario.id
+                    ? "bg-[#002244] text-white"
+                    : "bg-white border border-slate-200 text-slate-600 hover:border-[#002244]"
+                }`}
               >
-                {isLoading ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Running...
-                  </>
-                ) : (
-                  <>
-                    <BeakerIcon className="h-4 w-4" />
-                    Run All Benchmarks
-                  </>
-                )}
+                {scenario.category}
               </button>
-              <button
-                type="button"
-                onClick={handleRunSelected}
-                disabled={isLoading || !selectedQuestionId}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#002244] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2"
-              >
-                {isLoading ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Running...
-                  </>
-                ) : (
-                  "Run Selected"
-                )}
-              </button>
-            </div>
+            ))}
           </div>
-        </section>
 
-        <section className="mb-6 space-y-4">
-          {results.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-              <FlaskConicalIcon className="h-12 w-12 text-slate-400" />
-              <p className="mt-4 text-slate-500">
-                Select a scenario and run a benchmark to see results
-              </p>
+          {/* Selected scenario question card */}
+          {selectedScenario && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="text-xs text-blue-600 font-semibold uppercase tracking-widest mb-2">
+                Question
+              </div>
+              <div className="text-slate-800">
+                {selectedScenario.question}
+              </div>
             </div>
-          ) : (
-            <>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Average Similarity
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    {summary.averageSimilarity}%
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Avg Key Term Coverage
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    {summary.averageKeyTerms}%
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Tests Run
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">
-                    {summary.testsRun}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleExportJson}
-                    className="mt-3 w-full rounded-lg border border-slate-300 bg-white py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2"
-                  >
-                    Export Results as JSON
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {results.map((result) => (
-                  <BenchmarkCard key={result.questionId} result={result} />
-                ))}
-              </div>
-            </>
           )}
         </section>
-      </main>
 
-      <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-400">
-        Built with Next.js and Google Gemini | Academic Research Tool | Not for
-        Clinical Use
-      </footer>
+        {/* Section 2 - Run Controls */}
+        <section className="mb-8">
+          <button
+            onClick={handleRunBenchmark}
+            disabled={isRunning}
+            className="bg-[#002244] text-white px-8 py-3 rounded-xl font-semibold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-[#001a33] transition-colors"
+          >
+            {isRunning ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Running...
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                Run Benchmark
+              </>
+            )}
+          </button>
+
+          {hasRun && (
+            <button
+              onClick={handleReset}
+              className="ml-3 border border-slate-300 text-slate-700 px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-slate-50 transition-colors"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset
+            </button>
+          )}
+        </section>
+
+        {/* Section 3 - Results */}
+        {hasRun && results.length > 0 && (
+          <section>
+            {/* Summary row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                  Highest Score
+                </div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {highestScore}
+                </div>
+                <div className="text-sm text-slate-600">
+                  {highestScoreModel}
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                  Average Score
+                </div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {averageScore}
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                  Scenarios Tested
+                </div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {results.length}/3
+                </div>
+              </div>
+            </div>
+
+            {/* Results grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {results.map((result, index) => (
+                <div
+                  key={result.modelName}
+                  style={{ transitionDelay: `${index * 150}ms` }}
+                >
+                  <BenchmarkResultCard result={result} />
+                </div>
+              ))}
+            </div>
+
+            {/* Disclaimer */}
+            <div className="text-xs text-slate-400 text-center">
+              Scores reflect pre-stored responses evaluated against expert ground truth. Results are fully deterministic and reproducible.
+            </div>
+          </section>
+        )}
+      </main>
     </div>
   );
 }

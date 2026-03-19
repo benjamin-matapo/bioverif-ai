@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "BioVerif-AI | Biomedical AI Benchmarking",
   description:
-    "BioVerif-AI benchmarks Google Gemini 1.5 Flash against expert biomedical ground-truth answers across molecular biology, biochemistry, genomics, neuroscience, and immunology.",
+    "BioVerif-AI evaluates and benchmarks AI responses against expert biomedical knowledge using pre-stored scenarios for reproducible offline testing.",
   icons: {
     icon: "/favicon.ico",
   },
