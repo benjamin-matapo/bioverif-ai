@@ -2,7 +2,7 @@
 
 **A biomedical AI evaluation tool that benchmarks large language model responses against expert-curated ground truth answers.**
 
-Built as part of a research project exploring the accuracy and reliability of generative AI in biomedical science contexts. Developed using Next.js, TypeScript, Tailwind CSS, and Google Gemini 1.5 Flash.
+Built as part of a research project exploring the accuracy and reliability of generative AI in biomedical science contexts. Developed using Next.js, TypeScript, and Tailwind CSS with a fully offline data store system.
 
 > Academic research tool - not for clinical use.
 
@@ -12,147 +12,135 @@ Built as part of a research project exploring the accuracy and reliability of ge
 
 Large language models are increasingly being used to answer complex scientific questions. But how accurate are they really?
 
-BioVerif-AI lets you test any AI - ChatGPT, Claude, Gemini, Grok, Copilot, or anything else - against a set of expert-written biomedical reference answers. It scores each response on two dimensions: semantic similarity to the ground truth, and coverage of domain-specific key terms. The result is a structured, repeatable evaluation you can run on any model, any time.
+BioVerif-AI demonstrates a structured approach to evaluating AI responses using pre-stored biomedical scenarios. It scores each response on two dimensions: semantic similarity to ground truth, and coverage of domain-specific key terms. The result is a structured, repeatable evaluation that shows how different AI models perform on the same biomedical questions.
 
-The app has two modes:
-
-**Evaluator (main page)** - The primary experience. You pick a benchmark scenario, copy the question, ask any AI you want, paste the response back, and get a scored evaluation. You can run multiple AIs on the same question and compare them side by side in a session leaderboard.
-
-**Auto-Benchmark (beta)** - Calls Google Gemini 1.5 Flash directly via API and runs the full benchmark automatically. Useful for quick testing but limited to Gemini only.
+**Important:** This is a demonstration tool that showcases comparison technology using a fixed dataset of 5 expert-curated questions. It is not a comprehensive platform for evaluating arbitrary biomedical questions, but rather a proof-of-concept for how AI responses can be systematically compared and scored.
 
 ---
 
-## Benchmark Scenarios
+## 📋 How to Use (For Users)
 
-The app includes five expert-curated questions across core biomedical disciplines:
+### Quick Start
+1. **Open the app** - Navigate to the main page
+2. **Choose your evaluation mode:**
+   - **Evaluator** - Test any AI model manually
+   - **Auto-Benchmark** - View pre-stored AI responses for comparison
+3. **Evaluator Mode:**
+   - Select a biomedical question from the 5 available scenarios
+   - Copy the question and ask any AI (ChatGPT, Claude, Gemini, etc.)
+   - Paste the AI response back into the evaluator
+   - Get instant scoring: semantic similarity, key term coverage, and final score
+   - Compare multiple AI responses in a side-by-side leaderboard
+4. **Auto-Benchmark Mode:**
+   - View pre-stored responses from 3 AI models (ChatGPT, Gemini, Claude)
+   - See ground truth with clickable citation links
+   - Compare scores across models instantly
+   - All data is pre-stored for reproducible, offline testing
 
-| Scenario | Category | Difficulty |
-|---|---|---|
-| DNA Replication Fidelity | Molecular Biology | Postgraduate |
-| Krebs Cycle Regulation | Biochemistry | Undergraduate |
-| CRISPR-Cas9 Mechanism | Genomics & Gene Editing | Expert |
-| Blood-Brain Barrier Transport | Neuroscience | Postgraduate |
-| Antibody Diversity & VDJ Recombination | Immunology | Expert |
-
-Each question has a reference answer written to PhD level, a set of key terms the evaluator checks for, and a difficulty rating. Scores are calculated using bigram similarity against the ground truth and key term coverage percentage.
-
----
-
-## How to Use It
-
-### Evaluator (recommended)
-
-1. Open the app and go to the **Evaluator** page
-2. Click a scenario tile to select a question
-3. Hit **Copy Question** and paste it into any AI (ChatGPT, Claude, Gemini, etc.)
-4. Come back, select which AI you used, and paste its response into the text box
-5. Hit **Evaluate Response**
-6. Repeat with a different AI on the same question to get a side-by-side comparison
-
-### Auto-Benchmark (beta)
-
-1. Navigate to the **Auto-Benchmark** tab
-2. Select one or more scenario tiles
-3. Hit **Run Selected** or **Run All Benchmarks**
-4. The app calls Gemini directly and scores the response automatically
+### Understanding Your Results
+- **Semantic Similarity (60%)**: How closely the AI response matches the expert ground truth
+- **Key Term Coverage (40%)**: Percentage of important biomedical terms included
+- **Final Score**: Weighted combination showing overall response quality
+- **Verdict**: Performance rating (Excellent/Good/Partial/Poor)
 
 ---
 
-## Running Locally
+## 🛠️ For Developers
 
-### Prerequisites
-
-- Node.js 18 or later
-- A Google Gemini API key (free tier works - get one at [aistudio.google.com](https://aistudio.google.com))
-
-### Setup
+### Quick Start
 ```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/bioverif-ai.git
+git clone https://github.com/your-username/bioverif-ai.git
 cd bioverif-ai
-
-# Install dependencies
 npm install
-
-# Create your environment file
-touch .env.local
-```
-
-Add your API key to `.env.local`:
-```
-GEMINI_API_KEY=your_key_here
-```
-```bash
-# Start the development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-> The Evaluator page works without an API key. The Auto-Benchmark page requires one.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| Icons | Lucide React |
-| AI Model | Google Gemini 1.5 Flash |
-| Scoring | Custom bigram similarity algorithm |
-| Deployment | Vercel |
-
----
-
-## Project Structure
+### Project Structure
 ```
 src/
-├── app/
-│   ├── page.tsx              - Evaluator (main page)
-│   ├── benchmark/page.tsx    - Auto-Benchmark (beta)
-│   └── api/
-│       ├── evaluate/         - Manual scoring endpoint
-│       └── benchmark/        - Gemini API endpoint
+├── lib/
+│   ├── biomed-data.ts      # Expert questions and ground truth
+│   ├── dataset.ts          # Pre-stored AI responses
+│   ├── evaluate.ts         # Scoring logic for evaluator
+│   └── benchmarkEvaluation.ts # Scoring logic for auto-benchmark
 ├── components/
-│   ├── EvaluatorPanel.tsx
-│   ├── ComparisonTable.tsx
-│   ├── ResultCard.tsx
-│   ├── BenchmarkCard.tsx
-│   ├── AccuracyBar.tsx
-│   └── Navbar.tsx
-└── lib/
-    ├── biomed-data.ts        - Questions and ground truth answers
-    └── evaluate.ts           - Shared scoring logic
+│   ├── BenchmarkResultCard.tsx  # Auto-benchmark result display
+│   ├── ResultCard.tsx          # Evaluator result display
+│   ├── AccuracyBar.tsx         # Score visualization
+│   └── ScoreBadge.tsx          # Score badge component
+├── app/
+│   ├── page.tsx               # Main evaluator page
+│   ├── benchmark/page.tsx      # Auto-benchmark page
+│   └── api/evaluate/route.ts  # Evaluator API endpoint
+└── components/Navbar.tsx        # Navigation
+```
+
+### Key Architecture Decisions
+- **Offline Data Store**: No external API calls during evaluation
+- **Pre-stored Responses**: Reproducible benchmarking results
+- **Separate Scoring Logic**: Independent evaluation for both modes
+- **Responsive Design**: Mobile-first Tailwind CSS implementation
+- **TypeScript**: Full type safety across the application
+
+### Adding New Questions
+1. Update `src/lib/biomed-data.ts` with new question data
+2. Add corresponding AI responses in `src/lib/dataset.ts`
+3. Include proper citations for ground truth sources
+4. Test both evaluator and auto-benchmark modes
+
+### Development Commands
+```bash
+npm run dev      # Start development server
+npm run build    # Production build
+npm run start    # Start production server
 ```
 
 ---
 
-## Deployment
+## 📊 Benchmark Scenarios
 
-The live version is deployed on Vercel. To deploy your own:
+The app includes five expert-curated questions across core biomedical disciplines:
 
-1. Push this repo to GitHub
-2. Import it at [vercel.com](https://vercel.com)
-3. Add `GEMINI_API_KEY` under Settings - Environment Variables
-4. Deploy
+| Question | Category | Difficulty | Focus |
+|-----------|----------|------------|--------|
+| DNA Replication | Molecular Biology | Postgraduate | Fidelity mechanisms and repair pathways |
+| Krebs Cycle | Biochemistry | Undergraduate | Metabolic regulation and allosteric control |
+| CRISPR-Cas9 | Genomics | Expert | Gene editing mechanisms and repair pathways |
+| Blood-Brain Barrier | Neuroscience | Postgraduate | Transport mechanisms and neurovascular unit |
+| Antibody Diversity | Immunology | Expert | VDJ recombination and affinity maturation |
 
----
-
-## Limitations
-
-- Similarity scoring is based on bigram overlap, not semantic understanding - two answers can be factually equivalent but score differently if phrased very differently
-- The ground truth answers reflect a specific level of detail; more detailed or differently structured answers may score lower despite being correct
-- The Auto-Benchmark beta is rate-limited by the Gemini free tier
-
----
-
-## License
-
-MIT - free to use, modify, and build on.
+Each question includes:
+- Expert-written ground truth from peer-reviewed sources
+- Citations to authoritative biomedical literature (NCBI, PMC, etc.)
+- 15-20 key biomedical terms for coverage scoring
+- Pre-stored AI responses from ChatGPT, Gemini, and Claude
 
 ---
 
-*Built with Next.js and Google Gemini - Newcastle University Biomedical AI Research*
+## 🎯 What This Demonstrates
+
+This tool showcases how AI responses can be systematically evaluated and compared:
+
+1. **Structured Evaluation**: Consistent scoring methodology across different AI models
+2. **Reproducible Results**: Pre-stored data ensures identical comparisons
+3. **Multi-dimensional Scoring**: Combines semantic similarity with domain knowledge
+4. **User-friendly Interface**: Clear visualization of comparative performance
+5. **Academic Rigor**: Ground truth sourced from peer-reviewed biomedical literature
+
+### Limitations
+- Fixed dataset of 5 questions (not expandable by users)
+- Pre-stored AI responses (no live API calls)
+- Biomedical focus (not general-purpose evaluation)
+- Educational demonstration purpose (not production assessment tool)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions to improve the evaluation methodology, add new benchmark scenarios, or enhance the user interface. See the "For Developers" section above to get started.
+
+---
+
+## 📄 License
+
+This project is open source and available under the MIT License.
