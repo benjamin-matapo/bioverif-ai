@@ -1,9 +1,10 @@
 interface ScoreBadgeProps {
   score: number;
   size?: "sm" | "lg";
+  label?: string;
 }
 
-export function ScoreBadge({ score, size = "sm" }: ScoreBadgeProps) {
+export function ScoreBadge({ score, size = "sm", label }: ScoreBadgeProps) {
   const clampedScore = Math.min(100, Math.max(0, score));
 
   let colorClass = "bg-red-500";
@@ -28,7 +29,7 @@ export function ScoreBadge({ score, size = "sm" }: ScoreBadgeProps) {
       </div>
       {size === "lg" && (
         <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-          Similarity
+          {label || "Similarity"}
         </span>
       )}
     </div>

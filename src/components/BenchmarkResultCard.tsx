@@ -3,12 +3,24 @@
 import { useEffect, useState } from "react";
 import { BenchmarkResult } from "@/lib/benchmarkEvaluation";
 import { AccuracyBar } from "@/components/AccuracyBar";
+import { ExternalLink, BookOpen } from "lucide-react";
 
 interface BenchmarkResultCardProps {
   result: BenchmarkResult;
+  groundTruth: string;
+  aiResponse: string;
+  citation: {
+    text: string;
+    url: string;
+  };
 }
 
-export default function BenchmarkResultCard({ result }: BenchmarkResultCardProps) {
+export default function BenchmarkResultCard({ 
+  result, 
+  groundTruth, 
+  aiResponse, 
+  citation 
+}: BenchmarkResultCardProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -46,14 +58,14 @@ export default function BenchmarkResultCard({ result }: BenchmarkResultCardProps
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-slate-200 p-6 transition-all duration-500 ${
+      className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 transition-all duration-500 ${
         isVisible
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-2"
       }`}
     >
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-slate-800">{result.modelName}</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+        <h3 className="text-lg sm:text-xl font-bold text-slate-800">{result.modelName}</h3>
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${getVerdictColor(
             result.verdict
@@ -85,10 +97,31 @@ export default function BenchmarkResultCard({ result }: BenchmarkResultCardProps
         />
       </div>
 
-      <div className="mb-4">
-        <div className="text-sm text-slate-500 mb-2">Response Preview</div>
-        <div className="italic text-slate-600 text-sm bg-slate-50 rounded-lg p-3">
-          {result.responsePreview}
+      {/* AI Response Section */}
+      <div className="mb-6">
+        <div className="text-sm font-medium text-slate-700 mb-2">AI Response</div>
+        <div className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 max-h-32 overflow-y-auto">
+          {aiResponse}
+        </div>
+      </div>
+
+      {/* Ground Truth Section */}
+      <div className="mb-6">
+        <div className="text-sm font-medium text-slate-700 mb-2">Ground Truth</div>
+        <div className="text-sm text-slate-600 bg-green-50 rounded-lg p-3 max-h-32 overflow-y-auto">
+          {groundTruth}
+        </div>
+        <div className="mt-2">
+          <a
+            href={citation.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-start gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors break-all"
+          >
+            <BookOpen className="h-3 w-3 mt-0.5 flex-shrink-0" />
+            <span className="break-all">{citation.text}</span>
+            <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
+          </a>
         </div>
       </div>
 

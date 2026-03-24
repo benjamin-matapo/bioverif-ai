@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       keyTermsFound,
       keyTermsMissed,
       keyTermScore,
+      finalScore,
       verdict,
     } = evaluateResponse(
       trimmedResponse,
@@ -65,6 +66,7 @@ export async function POST(request: Request) {
         keyTermsFound,
         keyTermsMissed,
         keyTermScore,
+        finalScore,
         verdict,
         category: question.category,
         difficulty: question.difficulty,

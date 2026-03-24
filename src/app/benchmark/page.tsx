@@ -167,7 +167,7 @@ export default function BenchmarkPage() {
         {hasRun && results.length > 0 && (
           <section>
             {/* Summary row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 gap-4 mb-8">
               <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
                 <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
                   Highest Score
@@ -201,14 +201,23 @@ export default function BenchmarkPage() {
 
             {/* Results grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {results.map((result, index) => (
-                <div
-                  key={result.modelName}
-                  style={{ transitionDelay: `${index * 150}ms` }}
-                >
-                  <BenchmarkResultCard result={result} />
-                </div>
-              ))}
+              {results.map((result, index) => {
+                if (!selectedScenario) return null;
+                const modelKey = result.modelName.toLowerCase() as keyof typeof selectedScenario.modelResponses;
+                return (
+                  <div
+                    key={result.modelName}
+                    style={{ transitionDelay: `${index * 150}ms` }}
+                  >
+                    <BenchmarkResultCard 
+                      result={result} 
+                      groundTruth={selectedScenario.groundTruth}
+                      aiResponse={selectedScenario.modelResponses[modelKey]}
+                      citation={selectedScenario.citation}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {/* Disclaimer */}

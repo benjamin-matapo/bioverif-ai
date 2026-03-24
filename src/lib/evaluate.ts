@@ -23,6 +23,7 @@ export interface EvaluationResult {
   keyTermsFound: string[];
   keyTermsMissed: string[];
   keyTermScore: number;
+  finalScore: number;
   verdict: "Excellent" | "Good" | "Partial" | "Poor";
 }
 
@@ -34,10 +35,7 @@ export function evaluateResponse(
   const aiLower = aiResponse.toLowerCase();
   const truthLower = groundTruth.toLowerCase();
 
-  const similarityScore = Math.min(
-    100,
-    Math.round(Math.min(1, bigramSimilarity(aiLower, truthLower)) * 100),
-  );
+  const similarityScore = Math.round(bigramSimilarity(aiLower, truthLower) * 100);
 
   const keyTermsFound: string[] = [];
   const keyTermsMissed: string[] = [];
@@ -55,11 +53,12 @@ export function evaluateResponse(
       ? 0
       : Math.round((keyTermsFound.length / keyTerms.length) * 100);
 
-  const combined = (similarityScore + keyTermScore) / 2;
+  const combined = 0.6 * similarityScore + 0.4 * keyTermScore;
+  const finalScore = Math.round(combined);
   let verdict: EvaluationResult["verdict"];
-  if (combined >= 75) verdict = "Excellent";
-  else if (combined >= 55) verdict = "Good";
-  else if (combined >= 35) verdict = "Partial";
+  if (finalScore >= 75) verdict = "Excellent";
+  else if (finalScore >= 55) verdict = "Good";
+  else if (finalScore >= 35) verdict = "Partial";
   else verdict = "Poor";
 
   return {
@@ -67,6 +66,7 @@ export function evaluateResponse(
     keyTermsFound,
     keyTermsMissed,
     keyTermScore,
+    finalScore,
     verdict,
   };
 }

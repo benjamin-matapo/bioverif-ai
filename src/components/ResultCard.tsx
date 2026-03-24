@@ -14,6 +14,7 @@ export interface EvaluationResultPayload {
   keyTermsFound: string[];
   keyTermsMissed: string[];
   keyTermScore: number;
+  finalScore: number;
   verdict: "Excellent" | "Good" | "Partial" | "Poor";
   category: string;
   difficulty: string;
@@ -49,6 +50,7 @@ export function ResultCard({ result }: ResultCardProps) {
     keyTermsFound,
     keyTermsMissed,
     keyTermScore,
+    finalScore,
     verdict,
     timestamp,
   } = result;
@@ -86,7 +88,7 @@ export function ResultCard({ result }: ResultCardProps) {
       </header>
 
       <div className="mt-4 flex justify-center">
-        <ScoreBadge score={similarityScore} size="lg" />
+        <ScoreBadge score={finalScore} size="lg" label="Final Score" />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
