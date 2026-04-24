@@ -12,7 +12,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const { questionId, aiResponse, aiName } = body;
+    const { 
+      questionId, 
+      aiResponse, 
+      aiName,
+      pedagogicalRating,
+      clarityRating,
+      terminologyRating,
+      consistencyScore
+    } = body;
 
     if (
       typeof questionId !== "string" ||
@@ -71,6 +79,10 @@ export async function POST(request: Request) {
         category: question.category,
         difficulty: question.difficulty,
         timestamp: new Date().toISOString(),
+        pedagogicalRating: pedagogicalRating ?? null,
+        clarityRating: clarityRating ?? null,
+        terminologyRating: terminologyRating ?? null,
+        consistencyScore: consistencyScore ?? null,
       },
       { status: 200 },
     );

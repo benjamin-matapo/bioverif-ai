@@ -1,7 +1,7 @@
 "use client";
 
 import { List, ExternalLink, BarChart3, Check } from "lucide-react";
-import { BIOMED_QUESTIONS } from "@/lib/biomed-data";
+import { BIOMED_QUESTIONS, BiomedQuestion } from "@/lib/biomed-data";
 
 const AI_PILLS = ["ChatGPT", "Claude", "Gemini", "Grok", "Copilot"] as const;
 
@@ -19,6 +19,16 @@ interface EvaluatorPanelProps {
   copySuccess: boolean;
   onCopyQuestion: () => void;
   inputPanelRef: React.RefObject<HTMLDivElement | null>;
+  customScenarios: BiomedQuestion[];
+  onManageScenarios: () => void;
+  runConsistencyCheck: boolean;
+  onConsistencyCheckChange: (value: boolean) => void;
+  pedagogicalRating: number | null;
+  onPedagogicalRatingChange: (value: number | null) => void;
+  clarityRating: number | null;
+  onClarityRatingChange: (value: number | null) => void;
+  terminologyRating: number | null;
+  onTerminologyRatingChange: (value: number | null) => void;
 }
 
 export function EvaluatorPanel({
@@ -35,9 +45,20 @@ export function EvaluatorPanel({
   copySuccess,
   onCopyQuestion,
   inputPanelRef,
+  customScenarios,
+  onManageScenarios,
+  runConsistencyCheck,
+  onConsistencyCheckChange,
+  pedagogicalRating,
+  onPedagogicalRatingChange,
+  clarityRating,
+  onClarityRatingChange,
+  terminologyRating,
+  onTerminologyRatingChange,
 }: EvaluatorPanelProps) {
+  const allScenarios = [...BIOMED_QUESTIONS, ...customScenarios];
   const selectedQuestion = selectedId
-    ? BIOMED_QUESTIONS.find((q) => q.id === selectedId)
+    ? allScenarios.find((q) => q.id === selectedId)
     : null;
 
   const canEvaluate =
@@ -48,14 +69,23 @@ export function EvaluatorPanel({
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-[#002244]">
-          Step 1: Choose a Question
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[#002244]">
+            Step 1: Choose a Question
+          </h2>
+          <button
+            type="button"
+            onClick={onManageScenarios}
+            className="border border-[#002244] text-[#002244] text-sm px-3 py-1 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#002244]"
+          >
+            Manage Scenarios
+          </button>
+        </div>
         <p className="text-sm font-semibold text-[#002244]">
           Choose a Scenario
         </p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1">
-          {BIOMED_QUESTIONS.map((q) => {
+          {allScenarios.map((q) => {
             const isSelected = q.id === selectedId;
             const diffClass =
               q.difficulty === "Undergraduate"
@@ -68,12 +98,17 @@ export function EvaluatorPanel({
                 key={q.id}
                 type="button"
                 onClick={() => onSelectQuestion(q.id)}
-                className={`flex flex-col items-start rounded-xl border p-4 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2 ${
+                className={`relative flex flex-col items-start rounded-xl border p-4 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2 ${
                   isSelected
                     ? "border-2 border-[#002244] bg-blue-50 ring-2 ring-[#002244]"
                     : "border-slate-200 bg-white hover:shadow-md"
                 }`}
               >
+                {customScenarios.some((cs) => cs.id === q.id) && (
+                  <span className="absolute top-2 right-2 bg-purple-100 text-purple-700 text-xs px-1 rounded">
+                    Custom
+                  </span>
+                )}
                 <span className="text-xs font-bold uppercase tracking-widest text-[#002244]">
                   {q.category}
                 </span>
@@ -169,6 +204,81 @@ export function EvaluatorPanel({
           <p className="mt-1 text-right text-xs text-slate-500">
             {pastedResponse.length} characters
           </p>
+        </div>
+
+        <div className="flex items-center gap-2 mb-4">
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={runConsistencyCheck}
+              onChange={(e) => onConsistencyCheckChange(e.target.checked)}
+              className="w-4 h-4 text-[#002244] border-slate-300 rounded focus:ring-[#002244]"
+            />
+            Run 3x for consistency check
+          </label>
+        </div>
+
+        <div className="mb-4 space-y-3">
+          <p className="text-sm font-medium text-slate-700">Manual Assessment (optional)</p>
+          <div className="space-y-2">
+            <div>
+              <p className="text-xs text-slate-600 mb-1">Pedagogical Quality (1-5)</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => onPedagogicalRatingChange(pedagogicalRating === rating ? null : rating)}
+                    className={`h-7 w-7 rounded-full border-2 text-xs transition-colors ${
+                      pedagogicalRating === rating
+                        ? "bg-[#002244] border-[#002244] text-white"
+                        : "border-slate-300 text-slate-400 hover:border-[#002244] hover:text-[#002244]"
+                    }`}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-slate-600 mb-1">Structural Clarity (1-5)</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => onClarityRatingChange(clarityRating === rating ? null : rating)}
+                    className={`h-7 w-7 rounded-full border-2 text-xs transition-colors ${
+                      clarityRating === rating
+                        ? "bg-[#002244] border-[#002244] text-white"
+                        : "border-slate-300 text-slate-400 hover:border-[#002244] hover:text-[#002244]"
+                    }`}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-slate-600 mb-1">Terminology Precision (1-5)</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => onTerminologyRatingChange(terminologyRating === rating ? null : rating)}
+                    className={`h-7 w-7 rounded-full border-2 text-xs transition-colors ${
+                      terminologyRating === rating
+                        ? "bg-[#002244] border-[#002244] text-white"
+                        : "border-slate-300 text-slate-400 hover:border-[#002244] hover:text-[#002244]"
+                    }`}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         <button

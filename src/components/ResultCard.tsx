@@ -19,6 +19,10 @@ export interface EvaluationResultPayload {
   category: string;
   difficulty: string;
   timestamp: string;
+  pedagogicalRating: number | null;
+  clarityRating: number | null;
+  terminologyRating: number | null;
+  consistencyScore: number | null;
 }
 
 interface ResultCardProps {
@@ -113,6 +117,84 @@ export function ResultCard({ result }: ResultCardProps) {
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <AccuracyBar score={similarityScore} label="Similarity Score" />
         <AccuracyBar score={keyTermScore} label="Key Term Score" />
+      </div>
+
+      {result.consistencyScore !== null && (
+        <div className="mt-4">
+          <AccuracyBar score={result.consistencyScore} label="Consistency Score" />
+        </div>
+      )}
+
+      <div className="mt-6 border-t border-slate-200 pt-6">
+        <p className="text-sm font-semibold text-slate-900 mb-4">Manual Assessment</p>
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs text-slate-600 mb-2">Pedagogical Quality - Is this explanation appropriate for a Stage 1 student?</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  className={`h-8 w-8 rounded-full border-2 transition-colors ${
+                    result.pedagogicalRating === rating
+                      ? "bg-[#002244] border-[#002244] text-white"
+                      : "border-slate-300 text-slate-400 hover:border-[#002244] hover:text-[#002244]"
+                  }`}
+                  disabled
+                  aria-label={`Pedagogical rating ${rating}`}
+                >
+                  {rating}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-slate-600 mb-2">Structural Clarity - Is the response well organised and appropriately detailed?</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  className={`h-8 w-8 rounded-full border-2 transition-colors ${
+                    result.clarityRating === rating
+                      ? "bg-[#002244] border-[#002244] text-white"
+                      : "border-slate-300 text-slate-400 hover:border-[#002244] hover:text-[#002244]"
+                  }`}
+                  disabled
+                  aria-label={`Clarity rating ${rating}`}
+                >
+                  {rating}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-slate-600 mb-2">Terminology Precision - Does the response use correct scientific language throughout?</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  className={`h-8 w-8 rounded-full border-2 transition-colors ${
+                    result.terminologyRating === rating
+                      ? "bg-[#002244] border-[#002244] text-white"
+                      : "border-slate-300 text-slate-400 hover:border-[#002244] hover:text-[#002244]"
+                  }`}
+                  disabled
+                  aria-label={`Terminology rating ${rating}`}
+                >
+                  {rating}
+                </button>
+              ))}
+            </div>
+          </div>
+          {result.pedagogicalRating !== null && result.clarityRating !== null && result.terminologyRating !== null && (
+            <div className="pt-2">
+              <p className="text-xs text-slate-600">
+                Average Manual Score: <span className="font-semibold text-slate-900">
+                  {Math.round((result.pedagogicalRating + result.clarityRating + result.terminologyRating) / 3 * 20)}%
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 space-y-3">
