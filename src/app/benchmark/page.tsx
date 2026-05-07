@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FlaskConical, Play, RotateCcw, AlertTriangle } from "lucide-react";
+import { FlaskConical, Play, RotateCcw, Info, ExternalLink } from "lucide-react";
 import { BENCHMARK_DATASET } from "@/lib/dataset";
 import { runBenchmark, BenchmarkResult } from "@/lib/benchmarkEvaluation";
 import BenchmarkResultCard from "@/components/BenchmarkResultCard";
 import { Navbar } from "@/components/Navbar";
+import { AI_MODELS } from "@/lib/aiModels";
 
 export default function BenchmarkPage() {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>(
@@ -103,18 +104,18 @@ export default function BenchmarkPage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />
 
-      {/* Warning Banner */}
-      <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+      {/* Info Banner */}
+      <div className="bg-slate-50 border-b border-slate-200 px-4 py-3">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-amber-900">
-            <AlertTriangle className="h-5 w-5 shrink-0" />
+          <div className="flex items-center gap-2 text-slate-700">
+            <Info className="h-4 w-4 shrink-0 text-slate-500" />
             <p className="text-sm font-medium">
-              Auto-Benchmark Mode - All responses are pre-stored for reproducibility. No AI APIs are called.
+              Pre-stored Responses Mode - Results shown are based on pre-collected AI responses evaluated against expert ground truth. No external APIs are called and all scoring is fully deterministic.
             </p>
           </div>
           <Link
             href="/"
-            className="shrink-0 text-sm font-semibold text-amber-800 underline hover:text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="shrink-0 text-sm font-semibold text-slate-600 underline hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500"
           >
             Go to Evaluator
           </Link>
@@ -140,7 +141,7 @@ export default function BenchmarkPage() {
                     : "bg-white border border-slate-200 text-slate-600 hover:border-[#002244]"
                 }`}
               >
-                {scenario.category}
+                {scenario.module ? `[${scenario.module}] ${scenario.topic || scenario.category}` : scenario.category}
               </button>
             ))}
           </div>
@@ -247,6 +248,44 @@ export default function BenchmarkPage() {
                 );
               })}
             </div>
+
+            {/* AI Model Launch Buttons */}
+            {hasRun && selectedScenario && (
+              <div className="mt-8 space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#002244] mb-2">Try These Questions Yourself</h3>
+                  <p className="text-sm text-slate-600 mb-4">Open any AI model with the selected question pre-loaded</p>
+                </div>
+                
+                {/* Question display card */}
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <div className="text-xs text-blue-600 font-semibold uppercase tracking-widest mb-2">
+                    Question
+                  </div>
+                  <p className="text-sm text-slate-700">{selectedScenario.question}</p>
+                </div>
+                
+                {/* AI model buttons */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {AI_MODELS.map((model) => (
+                    <div key={model.id}>
+                      <button
+                        type="button"
+                        onClick={() => window.open(model.promptUrl(selectedScenario.question), '_blank')}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all border-slate-200 bg-white hover:shadow-sm hover:border-slate-400 w-full"
+                      >
+                        <div className={`h-2 w-2 rounded-full ${model.dotColor}`} />
+                        <span className="text-xs">{model.displayName}</span>
+                        <ExternalLink size={12} className="ml-auto" />
+                      </button>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {model.supportsPromptUrl ? "Pre-filled" : "Homepage only"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Disclaimer */}
             <div className="text-xs text-slate-400 text-center">

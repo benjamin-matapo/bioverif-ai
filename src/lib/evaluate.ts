@@ -1,4 +1,4 @@
-function bigramSimilarity(a: string, b: string): number {
+export function bigramSimilarity(a: string, b: string): number {
   if (a === b) return 1;
   if (a.length < 2 || b.length < 2) return 0;
   const getBigrams = (str: string): Map<string, number> => {

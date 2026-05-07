@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BenchmarkResult } from "@/lib/benchmarkEvaluation";
 import { AccuracyBar } from "@/components/AccuracyBar";
+import { getModelConfig } from "@/lib/aiModels";
 
 interface BenchmarkResultCardProps {
   result: BenchmarkResult;
@@ -50,49 +51,14 @@ export default function BenchmarkResultCard({
     return "bg-red-50";
   };
 
-  const getModelColorClass = (modelName: string) => {
-    const lowerName = modelName.toLowerCase();
-    switch (lowerName) {
-      case "chatgpt":
-        return "border-l-emerald-500";
-      case "gemini":
-        return "border-l-blue-500";
-      case "claude":
-        return "border-l-violet-500";
-      case "copilot":
-        return "border-l-sky-500";
-      case "deepseek":
-        return "border-l-rose-500";
-      case "grok":
-        return "border-l-amber-500";
-      default:
-        return "border-l-slate-500";
-    }
-  };
-
-  const getModelDotColor = (modelName: string) => {
-    const lowerName = modelName.toLowerCase();
-    switch (lowerName) {
-      case "chatgpt":
-        return "bg-emerald-500";
-      case "gemini":
-        return "bg-blue-500";
-      case "claude":
-        return "bg-violet-500";
-      case "copilot":
-        return "bg-sky-500";
-      case "deepseek":
-        return "bg-rose-500";
-      case "grok":
-        return "bg-amber-500";
-      default:
-        return "bg-slate-500";
-    }
-  };
+  const modelConfig = getModelConfig(result.modelName.toLowerCase());
+  const modelColorClass = modelConfig?.color || "border-l-slate-500";
+  const modelDotColor = modelConfig?.dotColor || "bg-slate-500";
+  const modelDisplayName = modelConfig?.displayName || result.modelName;
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-slate-200 border-l-4 ${getModelColorClass(result.modelName)} p-4 sm:p-6 transition-all duration-500 ${
+      className={`bg-white rounded-xl shadow-sm border border-slate-200 border-l-4 ${modelColorClass} p-4 sm:p-6 transition-all duration-500 ${
         isVisible
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-2"
@@ -100,8 +66,8 @@ export default function BenchmarkResultCard({
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
         <div className="flex items-center gap-2">
-          <div className={`h-3 w-3 rounded-full ${getModelDotColor(result.modelName)}`} />
-          <h3 className="text-lg sm:text-xl font-bold text-slate-800">{result.modelName}</h3>
+          <div className={`h-3 w-3 rounded-full ${modelDotColor}`} />
+          <h3 className="text-lg sm:text-xl font-bold text-slate-800">{modelDisplayName}</h3>
         </div>
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${getVerdictColor(

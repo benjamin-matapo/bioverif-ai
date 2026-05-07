@@ -2,6 +2,7 @@
 
 import { List, ExternalLink, BarChart3, Check } from "lucide-react";
 import { BIOMED_QUESTIONS, BiomedQuestion } from "@/lib/biomed-data";
+import { AI_MODELS } from "@/lib/aiModels";
 
 const AI_PILLS = ["ChatGPT", "Claude", "Gemini", "Grok", "Copilot"] as const;
 
@@ -109,8 +110,13 @@ export function EvaluatorPanel({
                     Custom
                   </span>
                 )}
+                {q.module && (
+                  <span className="text-xs font-mono text-slate-400">
+                    {q.module}
+                  </span>
+                )}
                 <span className="text-xs font-bold uppercase tracking-widest text-[#002244]">
-                  {q.category}
+                  {q.topic || q.category}
                 </span>
                 <span
                   className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${diffClass}`}
@@ -296,6 +302,34 @@ export function EvaluatorPanel({
             "Evaluate Response"
           )}
         </button>
+
+        {selectedQuestion && (
+          <div className="mt-6 space-y-3">
+            <p className="text-sm font-medium text-slate-700">Open in AI</p>
+            <p className="text-xs text-slate-500">Click to open the selected question in your chosen AI</p>
+            <div className="grid grid-cols-2 gap-2">
+              {AI_MODELS.map((model) => (
+                <button
+                  key={model.id}
+                  type="button"
+                  onClick={() => window.open(model.promptUrl(selectedQuestion.question), '_blank')}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all border-slate-200 bg-white hover:shadow-sm hover:border-slate-400"
+                >
+                  <div className={`h-2 w-2 rounded-full ${model.dotColor}`} />
+                  <span className="text-xs">{model.displayName}</span>
+                  <ExternalLink size={12} className="ml-auto" />
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
+              {AI_MODELS.map((model) => (
+                <div key={model.id}>
+                  {model.supportsPromptUrl ? "Opens with question pre-filled" : "Opens homepage - paste question manually"}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
