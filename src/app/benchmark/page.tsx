@@ -49,6 +49,24 @@ export default function BenchmarkPage() {
         selectedScenario.groundTruth,
         selectedScenario.keyTerms
       ),
+      runBenchmark(
+        "Copilot",
+        selectedScenario.modelResponses.copilot,
+        selectedScenario.groundTruth,
+        selectedScenario.keyTerms
+      ),
+      runBenchmark(
+        "DeepSeek",
+        selectedScenario.modelResponses.deepseek,
+        selectedScenario.groundTruth,
+        selectedScenario.keyTerms
+      ),
+      runBenchmark(
+        "Grok",
+        selectedScenario.modelResponses.grok,
+        selectedScenario.groundTruth,
+        selectedScenario.keyTerms
+      ),
     ];
 
     setResults(benchmarkResults);
@@ -67,6 +85,14 @@ export default function BenchmarkPage() {
 
   const highestScoreModel = results.length > 0
     ? results.find(r => r.finalScore === highestScore)?.modelName
+    : "";
+
+  const lowestScore = results.length > 0
+    ? Math.min(...results.map(r => r.finalScore))
+    : 0;
+
+  const lowestScoreModel = results.length > 0
+    ? results.find(r => r.finalScore === lowestScore)?.modelName
     : "";
 
   const averageScore = results.length > 0
@@ -170,7 +196,7 @@ export default function BenchmarkPage() {
             <div className="grid grid-cols-1 gap-4 mb-8">
               <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
                 <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
-                  Highest Score
+                  Highest Scoring Model
                 </div>
                 <div className="text-2xl font-bold text-slate-900">
                   {highestScore}
@@ -182,25 +208,28 @@ export default function BenchmarkPage() {
               
               <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
                 <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                  Lowest Scoring Model
+                </div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {lowestScore}
+                </div>
+                <div className="text-sm text-slate-600">
+                  {lowestScoreModel}
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
                   Average Score
                 </div>
                 <div className="text-2xl font-bold text-slate-900">
                   {averageScore}
                 </div>
               </div>
-              
-              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
-                  Scenarios Tested
-                </div>
-                <div className="text-2xl font-bold text-slate-900">
-                  {results.length}/3
-                </div>
-              </div>
             </div>
 
             {/* Results grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {results.map((result, index) => {
                 if (!selectedScenario) return null;
                 const modelKey = result.modelName.toLowerCase() as keyof typeof selectedScenario.modelResponses;
@@ -213,7 +242,6 @@ export default function BenchmarkPage() {
                       result={result} 
                       groundTruth={selectedScenario.groundTruth}
                       aiResponse={selectedScenario.modelResponses[modelKey]}
-                      citation={selectedScenario.citation}
                     />
                   </div>
                 );

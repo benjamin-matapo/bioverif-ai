@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { EvaluatorPanel, HeroSteps } from "@/components/EvaluatorPanel";
 import { ResultCard, type EvaluationResultPayload } from "@/components/ResultCard";
 import { ComparisonTable } from "@/components/ComparisonTable";
-import { BIOMED_QUESTIONS } from "@/lib/biomed-data";
+import { ScenarioManager } from "@/components/ScenarioManager";
+import { BIOMED_QUESTIONS, BiomedQuestion } from "@/lib/biomed-data";
+import { loadCustomScenarios } from "@/lib/customScenarios";
 
 type ApiError = { error: string };
 
@@ -22,9 +24,20 @@ export default function EvaluatorPage() {
   >([]);
   const [copySuccess, setCopySuccess] = useState(false);
   const inputPanelRef = useRef<HTMLDivElement | null>(null);
+  const [customScenarios, setCustomScenarios] = useState<BiomedQuestion[]>([]);
+  const [showScenarioManager, setShowScenarioManager] = useState(false);
+  const [runConsistencyCheck, setRunConsistencyCheck] = useState(false);
+  const [pedagogicalRating, setPedagogicalRating] = useState<number | null>(null);
+  const [clarityRating, setClarityRating] = useState<number | null>(null);
+  const [terminologyRating, setTerminologyRating] = useState<number | null>(null);
 
+  useEffect(() => {
+    setCustomScenarios(loadCustomScenarios());
+  }, []);
+
+  const allScenarios = [...BIOMED_QUESTIONS, ...customScenarios];
   const selectedQuestion = selectedId
-    ? BIOMED_QUESTIONS.find((q) => q.id === selectedId)
+    ? allScenarios.find((q) => q.id === selectedId)
     : null;
 
   const handleCopyQuestion = useCallback(() => {
@@ -44,7 +57,52 @@ export default function EvaluatorPage() {
       return;
     setLoading(true);
     setError(null);
+
     try {
+      let consistencyScore: number | null = null;
+
+      if (runConsistencyCheck) {
+        const responses: string[] = [];
+        for (let i = 0; i < 3; i++) {
+          const res = await fetch("/api/evaluate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              questionId: selectedId,
+              aiResponse: pastedResponse.trim(),
+              aiName: aiName.trim(),
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            setError("error" in data ? data.error : "Evaluation failed.");
+            setLoading(false);
+            return;
+          }
+          responses.push(data.aiResponse);
+        }
+
+        const bigramSimilarity = (s1: string, s2: string): number => {
+          const getBigrams = (str: string) => {
+            const bigrams = new Set<string>();
+            for (let i = 0; i < str.length - 1; i++) {
+              bigrams.add(str.slice(i, i + 2).toLowerCase());
+            }
+            return bigrams;
+          };
+          const bigrams1 = getBigrams(s1);
+          const bigrams2 = getBigrams(s2);
+          const intersection = new Set([...bigrams1].filter((x) => bigrams2.has(x)));
+          const union = new Set([...bigrams1, ...bigrams2]);
+          return union.size > 0 ? (intersection.size / union.size) * 100 : 0;
+        };
+
+        const sim12 = bigramSimilarity(responses[0], responses[1]);
+        const sim13 = bigramSimilarity(responses[0], responses[2]);
+        const sim23 = bigramSimilarity(responses[1], responses[2]);
+        consistencyScore = Math.round((sim12 + sim13 + sim23) / 3);
+      }
+
       const res = await fetch("/api/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,6 +110,10 @@ export default function EvaluatorPage() {
           questionId: selectedId,
           aiResponse: pastedResponse.trim(),
           aiName: aiName.trim(),
+          pedagogicalRating,
+          clarityRating,
+          terminologyRating,
+          consistencyScore,
         }),
       });
       const data = (await res.json()) as EvaluationResultPayload | ApiError;
@@ -61,16 +123,23 @@ export default function EvaluatorPage() {
       }
       setSessionResults((prev) => [...prev, data as EvaluationResultPayload]);
       setPastedResponse("");
+      setPedagogicalRating(null);
+      setClarityRating(null);
+      setTerminologyRating(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, [selectedId, aiName, pastedResponse]);
+  }, [selectedId, aiName, pastedResponse, runConsistencyCheck, pedagogicalRating, clarityRating, terminologyRating]);
 
   const resultsForQuestion = selectedId
     ? sessionResults.filter((r) => r.questionId === selectedId)
     : [];
+
+  const handleScenariosChange = (scenarios: BiomedQuestion[]) => {
+    setCustomScenarios(scenarios);
+  };
 
   const leaderboard = [...sessionResults].sort(
     (a, b) =>
@@ -128,6 +197,16 @@ export default function EvaluatorPage() {
             copySuccess={copySuccess}
             onCopyQuestion={handleCopyQuestion}
             inputPanelRef={inputPanelRef}
+            customScenarios={customScenarios}
+            onManageScenarios={() => setShowScenarioManager(true)}
+            runConsistencyCheck={runConsistencyCheck}
+            onConsistencyCheckChange={setRunConsistencyCheck}
+            pedagogicalRating={pedagogicalRating}
+            onPedagogicalRatingChange={setPedagogicalRating}
+            clarityRating={clarityRating}
+            onClarityRatingChange={setClarityRating}
+            terminologyRating={terminologyRating}
+            onTerminologyRatingChange={setTerminologyRating}
           />
         </section>
 
@@ -163,7 +242,7 @@ export default function EvaluatorPage() {
                   <ComparisonTable
                     results={resultsForQuestion}
                     question={
-                      BIOMED_QUESTIONS.find((q) => q.id === selectedId)
+                      allScenarios.find((q) => q.id === selectedId)
                         ?.question ?? ""
                     }
                     onAddAnother={scrollToInput}
@@ -247,6 +326,13 @@ export default function EvaluatorPage() {
             </aside>
           </div>
         )}
+
+        <ScenarioManager
+          isOpen={showScenarioManager}
+          onClose={() => setShowScenarioManager(false)}
+          onScenariosChange={handleScenariosChange}
+          customScenarios={customScenarios}
+        />
       </main>
     </div>
   );

@@ -3,23 +3,17 @@
 import { useEffect, useState } from "react";
 import { BenchmarkResult } from "@/lib/benchmarkEvaluation";
 import { AccuracyBar } from "@/components/AccuracyBar";
-import { ExternalLink, BookOpen } from "lucide-react";
 
 interface BenchmarkResultCardProps {
   result: BenchmarkResult;
   groundTruth: string;
   aiResponse: string;
-  citation: {
-    text: string;
-    url: string;
-  };
 }
 
 export default function BenchmarkResultCard({ 
   result, 
   groundTruth, 
-  aiResponse, 
-  citation 
+  aiResponse
 }: BenchmarkResultCardProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -56,16 +50,59 @@ export default function BenchmarkResultCard({
     return "bg-red-50";
   };
 
+  const getModelColorClass = (modelName: string) => {
+    const lowerName = modelName.toLowerCase();
+    switch (lowerName) {
+      case "chatgpt":
+        return "border-l-emerald-500";
+      case "gemini":
+        return "border-l-blue-500";
+      case "claude":
+        return "border-l-violet-500";
+      case "copilot":
+        return "border-l-sky-500";
+      case "deepseek":
+        return "border-l-rose-500";
+      case "grok":
+        return "border-l-amber-500";
+      default:
+        return "border-l-slate-500";
+    }
+  };
+
+  const getModelDotColor = (modelName: string) => {
+    const lowerName = modelName.toLowerCase();
+    switch (lowerName) {
+      case "chatgpt":
+        return "bg-emerald-500";
+      case "gemini":
+        return "bg-blue-500";
+      case "claude":
+        return "bg-violet-500";
+      case "copilot":
+        return "bg-sky-500";
+      case "deepseek":
+        return "bg-rose-500";
+      case "grok":
+        return "bg-amber-500";
+      default:
+        return "bg-slate-500";
+    }
+  };
+
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 transition-all duration-500 ${
+      className={`bg-white rounded-xl shadow-sm border border-slate-200 border-l-4 ${getModelColorClass(result.modelName)} p-4 sm:p-6 transition-all duration-500 ${
         isVisible
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-2"
       }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-        <h3 className="text-lg sm:text-xl font-bold text-slate-800">{result.modelName}</h3>
+        <div className="flex items-center gap-2">
+          <div className={`h-3 w-3 rounded-full ${getModelDotColor(result.modelName)}`} />
+          <h3 className="text-lg sm:text-xl font-bold text-slate-800">{result.modelName}</h3>
+        </div>
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${getVerdictColor(
             result.verdict
@@ -110,18 +147,6 @@ export default function BenchmarkResultCard({
         <div className="text-sm font-medium text-slate-700 mb-2">Ground Truth</div>
         <div className="text-sm text-slate-600 bg-green-50 rounded-lg p-3 max-h-32 overflow-y-auto">
           {groundTruth}
-        </div>
-        <div className="mt-2">
-          <a
-            href={citation.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-start gap-1 text-xs text-blue-600 hover:text-blue-800 transition-colors break-all"
-          >
-            <BookOpen className="h-3 w-3 mt-0.5 flex-shrink-0" />
-            <span className="break-all">{citation.text}</span>
-            <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
-          </a>
         </div>
       </div>
 
