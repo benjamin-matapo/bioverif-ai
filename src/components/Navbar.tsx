@@ -32,20 +32,13 @@ export function Navbar() {
           </Link>
           <Link
             href="/benchmark"
-            className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#002244]"
+            className={`text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#002244] ${
+              isBenchmark
+                ? "border-b-2 border-white text-white"
+                : "text-slate-300 hover:text-white"
+            }`}
           >
-            <span
-              className={`text-sm font-medium ${
-                isBenchmark
-                  ? "border-b-2 border-white text-white"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              Auto-Benchmark
-            </span>
-            <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white">
-              Beta
-            </span>
+            Auto-Benchmark
           </Link>
         </div>
       </nav>

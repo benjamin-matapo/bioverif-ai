@@ -1,22 +1,4 @@
-function bigramSimilarity(a: string, b: string): number {
-  if (a === b) return 1;
-  if (a.length < 2 || b.length < 2) return 0;
-  const getBigrams = (str: string): Map<string, number> => {
-    const bigrams = new Map<string, number>();
-    for (let i = 0; i < str.length - 1; i++) {
-      const bigram = str.slice(i, i + 2);
-      bigrams.set(bigram, (bigrams.get(bigram) ?? 0) + 1);
-    }
-    return bigrams;
-  };
-  const bigramsA = getBigrams(a);
-  const bigramsB = getBigrams(b);
-  let intersection = 0;
-  for (const [bigram, countA] of bigramsA) {
-    intersection += Math.min(countA, bigramsB.get(bigram) ?? 0);
-  }
-  return (2.0 * intersection) / (a.length + b.length - 2);
-}
+import { bigramSimilarity } from "./evaluate";
 
 export interface BenchmarkResult {
   modelName: string;

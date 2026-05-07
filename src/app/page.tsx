@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, ExternalLink } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { EvaluatorPanel, HeroSteps } from "@/components/EvaluatorPanel";
 import { ResultCard, type EvaluationResultPayload } from "@/components/ResultCard";
@@ -9,6 +9,7 @@ import { ComparisonTable } from "@/components/ComparisonTable";
 import { ScenarioManager } from "@/components/ScenarioManager";
 import { BIOMED_QUESTIONS, BiomedQuestion } from "@/lib/biomed-data";
 import { loadCustomScenarios } from "@/lib/customScenarios";
+import { AI_MODELS } from "@/lib/aiModels";
 
 type ApiError = { error: string };
 
