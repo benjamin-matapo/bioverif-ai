@@ -4,7 +4,7 @@ import { List, ExternalLink, BarChart3, Check } from "lucide-react";
 import { BIOMED_QUESTIONS, BiomedQuestion } from "@/lib/biomed-data";
 import { AI_MODELS } from "@/lib/aiModels";
 
-const AI_PILLS = ["ChatGPT", "Claude", "Gemini", "Grok", "Copilot"] as const;
+const AI_PILLS = ["ChatGPT", "Claude", "Gemini", "Grok", "Copilot", "Deepseek"] as const;
 
 interface EvaluatorPanelProps {
   selectedId: string | null;
