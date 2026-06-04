@@ -14,7 +14,7 @@ Large language models are increasingly being used to answer complex scientific q
 
 BioVerif-AI demonstrates a structured approach to evaluating AI responses using pre-stored biomedical scenarios. It scores each response on two dimensions: semantic similarity to ground truth, and coverage of domain-specific key terms. The result is a structured, repeatable evaluation that shows how different AI models perform on the same biomedical questions.
 
-**Important:** This is a demonstration tool that showcases comparison technology using a fixed dataset of 5 expert-curated questions. It is not a comprehensive platform for evaluating arbitrary biomedical questions, but rather a proof-of-concept for how AI responses can be systematically compared and scored.
+**Important:** This is a demonstration tool that showcases comparison technology using a fixed dataset of 6 expert-curated questions. It is not a comprehensive platform for evaluating arbitrary biomedical questions, but rather a proof-of-concept for how AI responses can be systematically compared and scored.
 
 ---
 
@@ -26,20 +26,22 @@ BioVerif-AI demonstrates a structured approach to evaluating AI responses using 
    - **Evaluator** - Test any AI model manually
    - **Auto-Benchmark** - View pre-stored AI responses for comparison
 3. **Evaluator Mode:**
-   - Select a biomedical question from the 5 available scenarios
+   - Select a biomedical question from the 6 available scenarios
    - Copy the question and ask any AI (ChatGPT, Claude, Gemini, etc.)
    - Paste the AI response back into the evaluator
    - Get instant scoring: semantic similarity, key term coverage, and final score
-   - Compare multiple AI responses in a side-by-side leaderboard
+   - Compare multiple AI responses in a side-by-side leaderboard with visual rankings
 4. **Auto-Benchmark Mode:**
-   - View pre-stored responses from 3 AI models (ChatGPT, Gemini, Claude)
+   - View pre-stored responses from 6 AI models (ChatGPT, Gemini, Claude, Copilot, DeepSeek, Grok)
    - See ground truth with clickable citation links
-   - Compare scores across models instantly
+   - Compare scores across models instantly with visual leaderboard
+   - Explore thematic analysis by question category
    - All data is pre-stored for reproducible, offline testing
 
 ### Understanding Your Results
-- **Semantic Similarity (60%)**: How closely the AI response matches the expert ground truth
-- **Key Term Coverage (40%)**: Percentage of important biomedical terms included
+- **Semantic Similarity (60%)**: How closely the AI response matches the expert ground truth (TF-IDF cosine similarity)
+- **Key Term Coverage (40%)**: Percentage of important biomedical terms included (fuzzy matching with synonyms)
+- **Final Score**: Weighted combination showing overall response quality
 - **Final Score**: Weighted combination showing overall response quality
 - **Verdict**: Performance rating (Excellent/Good/Partial/Poor)
 
@@ -67,7 +69,9 @@ src/
 │   ├── BenchmarkResultCard.tsx  # Auto-benchmark result display
 │   ├── ResultCard.tsx          # Evaluator result display
 │   ├── AccuracyBar.tsx         # Score visualization
-│   └── ScoreBadge.tsx          # Score badge component
+│   ├── ScoreBadge.tsx          # Score badge component
+│   ├── AILeaderboard.tsx       # Visual ranked model leaderboard
+│   └── ThematicAnalysis.tsx    # Category-wise performance breakdown
 ├── app/
 │   ├── page.tsx               # Main evaluator page
 │   ├── benchmark/page.tsx      # Auto-benchmark page
@@ -78,6 +82,7 @@ src/
 ### Key Architecture Decisions
 - **Offline Data Store**: No external API calls during evaluation
 - **Pre-stored Responses**: Reproducible benchmarking results
+- **TF-IDF Scoring**: Semantic similarity using term frequency-inverse document frequency
 - **Separate Scoring Logic**: Independent evaluation for both modes
 - **Responsive Design**: Mobile-first Tailwind CSS implementation
 - **TypeScript**: Full type safety across the application
@@ -99,21 +104,22 @@ npm run start    # Start production server
 
 ## 📊 Benchmark Scenarios
 
-The app includes five expert-curated questions across core biomedical disciplines:
+The app includes six expert-curated questions across core biomedical disciplines:
 
-| Question | Category | Difficulty | Focus |
-|-----------|----------|------------|--------|
-| DNA Replication | Molecular Biology | Postgraduate | Fidelity mechanisms and repair pathways |
-| Krebs Cycle | Biochemistry | Undergraduate | Metabolic regulation and allosteric control |
-| CRISPR-Cas9 | Genomics | Expert | Gene editing mechanisms and repair pathways |
-| Blood-Brain Barrier | Neuroscience | Postgraduate | Transport mechanisms and neurovascular unit |
-| Antibody Diversity | Immunology | Expert | VDJ recombination and affinity maturation |
+| ID | Question | Category | Difficulty | Focus |
+|----|----------|----------|------------|--------|
+| BMD1001 | Viruses & Replication | Virology | Postgraduate | Baltimore classification, replication cycles |
+| BMD1002 | Coding in Biosciences | Computational Biology | Postgraduate | Bioinformatics, programming in biomedical research |
+| BMD1003 | Cell Signalling | Molecular Biology | Postgraduate | Signalling cascades, kinase cascades, second messengers |
+| BMD1004 | Pharmacology | Pharmacology | Postgraduate | Agonist-binding, affinity, potency, efficacy |
+| BMD1005 | Excitability | Neuroscience | Postgraduate | Action potentials, ion channels, membrane potential |
+| BMD1000 | Separation Science | Analytical Chemistry | Postgraduate | Chromatography, electrophoresis, mass spectrometry |
 
 Each question includes:
 - Expert-written ground truth from peer-reviewed sources
 - Citations to authoritative biomedical literature (NCBI, PMC, etc.)
-- 15-20 key biomedical terms for coverage scoring
-- Pre-stored AI responses from ChatGPT, Gemini, and Claude
+- 17-22 key biomedical terms for coverage scoring
+- Pre-stored AI responses from ChatGPT, Gemini, Claude, Copilot, DeepSeek, and Grok
 
 ---
 
@@ -128,7 +134,7 @@ This tool showcases how AI responses can be systematically evaluated and compare
 5. **Academic Rigor**: Ground truth sourced from peer-reviewed biomedical literature
 
 ### Limitations
-- Fixed dataset of 5 questions (not expandable by users)
+- Fixed dataset of 6 questions (not expandable by users)
 - Pre-stored AI responses (no live API calls)
 - Biomedical focus (not general-purpose evaluation)
 - Educational demonstration purpose (not production assessment tool)

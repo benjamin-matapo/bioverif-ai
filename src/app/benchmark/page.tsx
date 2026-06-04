@@ -6,6 +6,7 @@ import { FlaskConical, Play, RotateCcw, Info, ExternalLink } from "lucide-react"
 import { BENCHMARK_DATASET } from "@/lib/dataset";
 import { runBenchmark, BenchmarkResult } from "@/lib/benchmarkEvaluation";
 import BenchmarkResultCard from "@/components/BenchmarkResultCard";
+import { AILeaderboard, ModelColorKey } from "@/components/AILeaderboard";
 import { Navbar } from "@/components/Navbar";
 import { AI_MODELS } from "@/lib/aiModels";
 
@@ -28,46 +29,15 @@ export default function BenchmarkPage() {
     setHasRun(false);
     setResults([]);
 
-    // Simulate loading delay
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const benchmarkResults: BenchmarkResult[] = [
-      runBenchmark(
-        "ChatGPT",
-        selectedScenario.modelResponses.chatgpt,
-        selectedScenario.groundTruth,
-        selectedScenario.keyTerms
-      ),
-      runBenchmark(
-        "Gemini",
-        selectedScenario.modelResponses.gemini,
-        selectedScenario.groundTruth,
-        selectedScenario.keyTerms
-      ),
-      runBenchmark(
-        "Claude",
-        selectedScenario.modelResponses.claude,
-        selectedScenario.groundTruth,
-        selectedScenario.keyTerms
-      ),
-      runBenchmark(
-        "Copilot",
-        selectedScenario.modelResponses.copilot,
-        selectedScenario.groundTruth,
-        selectedScenario.keyTerms
-      ),
-      runBenchmark(
-        "DeepSeek",
-        selectedScenario.modelResponses.deepseek,
-        selectedScenario.groundTruth,
-        selectedScenario.keyTerms
-      ),
-      runBenchmark(
-        "Grok",
-        selectedScenario.modelResponses.grok,
-        selectedScenario.groundTruth,
-        selectedScenario.keyTerms
-      ),
+      runBenchmark("ChatGPT", selectedScenario.modelResponses.chatgpt, selectedScenario.groundTruth, selectedScenario.keyTerms),
+      runBenchmark("Gemini", selectedScenario.modelResponses.gemini, selectedScenario.groundTruth, selectedScenario.keyTerms),
+      runBenchmark("Claude", selectedScenario.modelResponses.claude, selectedScenario.groundTruth, selectedScenario.keyTerms),
+      runBenchmark("Copilot", selectedScenario.modelResponses.copilot, selectedScenario.groundTruth, selectedScenario.keyTerms),
+      runBenchmark("DeepSeek", selectedScenario.modelResponses.deepseek, selectedScenario.groundTruth, selectedScenario.keyTerms),
+      runBenchmark("Grok", selectedScenario.modelResponses.grok, selectedScenario.groundTruth, selectedScenario.keyTerms),
     ];
 
     setResults(benchmarkResults);
@@ -80,7 +50,7 @@ export default function BenchmarkPage() {
     setHasRun(false);
   };
 
-  const highestScore = results.length > 0 
+  const highestScore = results.length > 0
     ? Math.max(...results.map(r => r.finalScore))
     : 0;
 
@@ -100,17 +70,26 @@ export default function BenchmarkPage() {
     ? Math.round(results.reduce((sum, r) => sum + r.finalScore, 0) / results.length)
     : 0;
 
+  const leaderboardEntries = results.map((r) => ({
+    modelName: r.modelName,
+    finalScore: r.finalScore,
+    similarityScore: r.semanticScore,
+    keyTermScore: r.keyTermScore,
+    verdict: r.verdict,
+  }));
+
+  const modelNames = results.map((r) => r.modelName);
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />
 
-      {/* Info Banner */}
       <div className="bg-slate-50 border-b border-slate-200 px-4 py-3">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-slate-700">
             <Info className="h-4 w-4 shrink-0 text-slate-500" />
             <p className="text-sm font-medium">
-              Pre-stored Responses Mode - Results shown are based on pre-collected AI responses evaluated against expert ground truth. No external APIs are called and all scoring is fully deterministic.
+              Pre-stored Responses Mode - Results shown are based on pre-collected AI responses evaluated against expert ground truth using TF-IDF semantic similarity scoring. No external APIs are called and all scoring is fully deterministic.
             </p>
           </div>
           <Link
@@ -123,13 +102,11 @@ export default function BenchmarkPage() {
       </div>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-        {/* Section 1 - Scenario Selector */}
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-[#002244] mb-4">
             Select Benchmark Scenario
           </h2>
-          
-          {/* Horizontal scrollable row of scenario pills */}
+
           <div className="flex gap-3 overflow-x-auto pb-2 mb-4">
             {BENCHMARK_DATASET.map((scenario) => (
               <button
@@ -146,7 +123,6 @@ export default function BenchmarkPage() {
             ))}
           </div>
 
-          {/* Selected scenario question card */}
           {selectedScenario && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
               <div className="text-xs text-blue-600 font-semibold uppercase tracking-widest mb-2">
@@ -159,7 +135,6 @@ export default function BenchmarkPage() {
           )}
         </section>
 
-        {/* Section 2 - Run Controls */}
         <section className="mb-8">
           <button
             onClick={handleRunBenchmark}
@@ -190,46 +165,56 @@ export default function BenchmarkPage() {
           )}
         </section>
 
-        {/* Section 3 - Results */}
         {hasRun && results.length > 0 && (
           <section>
-            {/* Summary row */}
-            <div className="grid grid-cols-1 gap-4 mb-8">
-              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
-                  Highest Scoring Model
-                </div>
-                <div className="text-2xl font-bold text-slate-900">
-                  {highestScore}
-                </div>
-                <div className="text-sm text-slate-600">
-                  {highestScoreModel}
-                </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
+              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm lg:col-span-2">
+                <AILeaderboard entries={leaderboardEntries} title="Model Rankings" />
               </div>
-              
-              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
-                  Lowest Scoring Model
+
+              <div className="space-y-4">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                    Highest Scoring Model
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">
+                    {highestScore}
+                  </div>
+                  <div className="text-sm font-medium text-slate-600">
+                    {highestScoreModel}
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-slate-900">
-                  {lowestScore}
+
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                    Lowest Scoring Model
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">
+                    {lowestScore}
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    {lowestScoreModel}
+                  </div>
                 </div>
-                <div className="text-sm text-slate-600">
-                  {lowestScoreModel}
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
-                  Average Score
-                </div>
-                <div className="text-2xl font-bold text-slate-900">
-                  {averageScore}
+
+                <div className="bg-white rounded-xl border border-slate-200 p-4 text-center shadow-sm">
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-2">
+                    Average Score
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">
+                    {averageScore}
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    Across all models
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Results grid */}
+            <div className="mb-4">
+              <ModelColorKey models={modelNames} />
+            </div>
+
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {results.map((result, index) => {
                 if (!selectedScenario) return null;
@@ -239,8 +224,8 @@ export default function BenchmarkPage() {
                     key={result.modelName}
                     style={{ transitionDelay: `${index * 150}ms` }}
                   >
-                    <BenchmarkResultCard 
-                      result={result} 
+                    <BenchmarkResultCard
+                      result={result}
                       groundTruth={selectedScenario.groundTruth}
                       aiResponse={selectedScenario.modelResponses[modelKey]}
                     />
@@ -249,23 +234,20 @@ export default function BenchmarkPage() {
               })}
             </div>
 
-            {/* AI Model Launch Buttons */}
             {hasRun && selectedScenario && (
               <div className="mt-8 space-y-4">
                 <div>
                   <h3 className="text-lg font-semibold text-[#002244] mb-2">Try These Questions Yourself</h3>
                   <p className="text-sm text-slate-600 mb-4">Open any AI model with the selected question pre-loaded</p>
                 </div>
-                
-                {/* Question display card */}
+
                 <div className="bg-blue-50 rounded-xl p-4">
                   <div className="text-xs text-blue-600 font-semibold uppercase tracking-widest mb-2">
                     Question
                   </div>
                   <p className="text-sm text-slate-700">{selectedScenario.question}</p>
                 </div>
-                
-                {/* AI model buttons */}
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {AI_MODELS.map((model) => (
                     <div key={model.id}>
@@ -287,9 +269,8 @@ export default function BenchmarkPage() {
               </div>
             )}
 
-            {/* Disclaimer */}
             <div className="text-xs text-slate-400 text-center">
-              Scores reflect pre-stored responses evaluated against expert ground truth. Results are fully deterministic and reproducible.
+              Scores reflect pre-stored responses evaluated against expert ground truth using TF-IDF semantic similarity. Results are fully deterministic and reproducible.
             </div>
           </section>
         )}
