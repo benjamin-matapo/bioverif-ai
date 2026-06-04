@@ -6,12 +6,28 @@ import { Navbar } from "@/components/Navbar";
 import { EvaluatorPanel, HeroSteps } from "@/components/EvaluatorPanel";
 import { ResultCard, type EvaluationResultPayload } from "@/components/ResultCard";
 import { ComparisonTable } from "@/components/ComparisonTable";
+import { AILeaderboard } from "@/components/AILeaderboard";
+import { ThematicAnalysis } from "@/components/ThematicAnalysis";
 import { ScenarioManager } from "@/components/ScenarioManager";
 import { BIOMED_QUESTIONS, BiomedQuestion } from "@/lib/biomed-data";
 import { loadCustomScenarios } from "@/lib/customScenarios";
 import { AI_MODELS } from "@/lib/aiModels";
+import { tokenize, computeTF, computeIDF, cosineSimilarity } from "@/lib/evaluate";
 
 type ApiError = { error: string };
+
+function tfidfSimilarity(a: string, b: string): number {
+  const tokensA = tokenize(a);
+  const tokensB = tokenize(b);
+  const tfA = computeTF(tokensA);
+  const tfB = computeTF(tokensB);
+  const idf = computeIDF([tokensA, tokensB]);
+  const tfidfA = new Map();
+  const tfidfB = new Map();
+  for (const [token, val] of tfA) tfidfA.set(token, val * (idf.get(token) ?? 1));
+  for (const [token, val] of tfB) tfidfB.set(token, val * (idf.get(token) ?? 1));
+  return cosineSimilarity(tfidfA, tfidfB);
+}
 
 export default function EvaluatorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -31,6 +47,7 @@ export default function EvaluatorPage() {
   const [pedagogicalRating, setPedagogicalRating] = useState<number | null>(null);
   const [clarityRating, setClarityRating] = useState<number | null>(null);
   const [terminologyRating, setTerminologyRating] = useState<number | null>(null);
+  const [showThematic, setShowThematic] = useState(false);
 
   useEffect(() => {
     setCustomScenarios(loadCustomScenarios());
@@ -83,25 +100,10 @@ export default function EvaluatorPage() {
           responses.push(data.aiResponse);
         }
 
-        const bigramSimilarity = (s1: string, s2: string): number => {
-          const getBigrams = (str: string) => {
-            const bigrams = new Set<string>();
-            for (let i = 0; i < str.length - 1; i++) {
-              bigrams.add(str.slice(i, i + 2).toLowerCase());
-            }
-            return bigrams;
-          };
-          const bigrams1 = getBigrams(s1);
-          const bigrams2 = getBigrams(s2);
-          const intersection = new Set([...bigrams1].filter((x) => bigrams2.has(x)));
-          const union = new Set([...bigrams1, ...bigrams2]);
-          return union.size > 0 ? (intersection.size / union.size) * 100 : 0;
-        };
-
-        const sim12 = bigramSimilarity(responses[0], responses[1]);
-        const sim13 = bigramSimilarity(responses[0], responses[2]);
-        const sim23 = bigramSimilarity(responses[1], responses[2]);
-        consistencyScore = Math.round((sim12 + sim13 + sim23) / 3);
+        const sim12 = tfidfSimilarity(responses[0], responses[1]);
+        const sim13 = tfidfSimilarity(responses[0], responses[2]);
+        const sim23 = tfidfSimilarity(responses[1], responses[2]);
+        consistencyScore = Math.round(((sim12 + sim13 + sim23) / 3) * 100);
       }
 
       const res = await fetch("/api/evaluate", {
@@ -142,11 +144,13 @@ export default function EvaluatorPage() {
     setCustomScenarios(scenarios);
   };
 
-  const leaderboard = [...sessionResults].sort(
-    (a, b) =>
-      (b.similarityScore + b.keyTermScore) / 2 -
-      (a.similarityScore + a.keyTermScore) / 2,
-  );
+  const leaderboardEntries = sessionResults.map((r) => ({
+    modelName: r.aiName,
+    finalScore: r.finalScore,
+    similarityScore: r.similarityScore,
+    keyTermScore: r.keyTermScore,
+    verdict: r.verdict,
+  }));
 
   const handleExportSession = useCallback(() => {
     if (sessionResults.length === 0) return;
@@ -166,6 +170,8 @@ export default function EvaluatorPage() {
   const handleClearSession = useCallback(() => {
     setSessionResults([]);
   }, []);
+
+  const uniqueModels = [...new Set(sessionResults.map((r) => r.aiName))];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -227,7 +233,7 @@ export default function EvaluatorPage() {
 
         {sessionResults.length > 0 && (
           <div className="mt-10 flex flex-col gap-8 xl:flex-row">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h2 className="border-b-2 border-[#002244] pb-2 text-lg font-bold text-slate-900">
                 Evaluation Results
               </h2>
@@ -264,7 +270,7 @@ export default function EvaluatorPage() {
                 </p>
               )}
 
-              <div className="mt-6">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={handleExportSession}
@@ -272,54 +278,35 @@ export default function EvaluatorPage() {
                 >
                   Export Session Results
                 </button>
+                {sessionResults.length >= 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowThematic(!showThematic)}
+                    className={`rounded-lg border px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2 ${
+                      showThematic
+                        ? "bg-[#002244] text-white border-[#002244]"
+                        : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    {showThematic ? "Hide" : "Show"} Thematic Analysis
+                  </button>
+                )}
               </div>
+
+              {showThematic && sessionResults.length >= 3 && (
+                <div className="mt-6">
+                  <ThematicAnalysis results={sessionResults} />
+                </div>
+              )}
             </div>
 
             <aside className="xl:w-80 xl:shrink-0">
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <h3 className="text-base font-bold text-slate-900">
-                  Session Leaderboard
-                </h3>
-                <p className="mt-1 text-xs text-slate-500">
-                  Scores across all evaluations this session
-                </p>
-                <ol className="mt-4 space-y-2">
-                  {leaderboard.map((r, i) => {
-                    const combined = Math.round(
-                      (r.similarityScore + r.keyTermScore) / 2,
-                    );
-                    const badgeClass =
-                      combined >= 75
-                        ? "bg-emerald-100 text-emerald-700"
-                        : combined >= 55
-                          ? "bg-blue-100 text-blue-700"
-                          : combined >= 35
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700";
-                    return (
-                      <li
-                        key={`${r.aiName}-${r.questionId}-${r.timestamp}`}
-                        className="flex items-center justify-between gap-2 text-sm"
-                      >
-                        <span className="font-medium text-slate-700">
-                          {i + 1}. {r.aiName}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {r.category}
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badgeClass}`}
-                        >
-                          {combined}%
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ol>
+              <div className="space-y-4">
+                <AILeaderboard entries={leaderboardEntries} />
                 <button
                   type="button"
                   onClick={handleClearSession}
-                  className="mt-4 w-full rounded-lg border border-slate-300 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2"
+                  className="w-full rounded-lg border border-slate-300 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#002244] focus:ring-offset-2"
                 >
                   Clear Session
                 </button>
