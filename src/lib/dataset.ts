@@ -752,7 +752,29 @@ Biological Meaning: Drug A (left) requires a smaller dose than Drug B (right) to
 Metric: Efficacy Comparison
 Visual Shift on a Graph: Up/Down Shift: A curve with a higher peak represents a drug with higher efficacy (Emax is greater).
 Biological Meaning: Drug A (high peak) is a Full Agonist. Drug C (low peak) is a Partial Agonist; it can never match the maximum effect of Drug A, no matter how much you give.`,
-          claude: `[Insert Claude response to "What are affinity, potency and efficacy, and how are they used to describe the action of agonist drugs?"]`,
+          claude: `Key Pharmacological Terms for Agonist Drugs
+These three terms describe different aspects of how agonist drugs interact with receptors and produce biological effects:
+Affinity
+Definition: The strength of binding between a drug and its receptor
+What it measures: How tightly a drug binds to a receptor
+Determined by: The equilibrium dissociation constant (Kd) - lower Kd = higher affinity
+Clinical relevance: High affinity drugs can achieve effects at lower concentrations
+Potency
+Definition: The amount of drug needed to produce a given effect
+What it measures: Drug concentration or dose required to achieve a specific response (often 50% of maximum, or EC50)
+Factors affecting potency: Affinity, efficacy, and pharmacokinetic properties
+Clinical relevance: More potent drugs require smaller doses (e.g., fentanyl vs. morphine)
+Efficacy
+Definition: The maximum response a drug can produce
+What it measures: The ability of a drug-receptor complex to activate cellular responses
+Types of agonists:
+Full agonist: Maximum efficacy (100% response)
+Partial agonist: Submaximal efficacy even at full receptor occupancy
+Clinical relevance: Determines the ceiling effect of a drug
+Key Relationships
+A drug can have high affinity but low efficacy (partial agonist)
+Potency depends on both affinity and efficacy
+Efficacy is generally more clinically important than potency - what matters most is whether the drug can achieve the desired therapeutic effect`,
           copilot: `Affinity, potency, and efficacy are three core pharmacological concepts used to describe how agonist drugs interact with receptors and produce biological effects. They each capture a different aspect of drug action — how well a drug binds, how much drug is needed, and how strongly it activates a receptor.
 Takeaway:
 Affinity = how tightly a drug binds
@@ -1119,7 +1141,59 @@ Speed: Slower
 Typical function: Growth and metabolism
 
 So, cell signalling is the process of cells receiving and responding to information, and cell surface receptors act as the communication gateways that translate external signals into cellular actions.`,
-          claude: `[Insert Claude Response to "What is cell signalling, and what are the main classes of cell surface receptor involved in transmitting signals into the cell?"]`,
+          claude: `Cell Signalling
+What is Cell Signalling?
+Cell signalling is the process by which cells communicate with each other and respond to their environment. It involves:
+Extracellular signals (ligands): hormones, neurotransmitters, growth factors, cytokines
+Reception: Detection of signals by specific receptors
+Transduction: Conversion of the signal into intracellular biochemical changes
+Response: Altered cell function (gene expression, metabolism, movement, etc.)
+This allows cells to coordinate activities, respond to stimuli, and maintain homeostasis.
+Main Classes of Cell Surface Receptors
+1. Ligand-Gated Ion Channels (Ionotropic Receptors)
+
+Mechanism: Ligand binding directly opens an ion channel
+Speed: Very fast (milliseconds)
+Examples:
+Nicotinic acetylcholine receptors
+GABA-A receptors
+Glutamate receptors (NMDA, AMPA)
+Function: Rapid neurotransmission
+2. G Protein-Coupled Receptors (GPCRs)
+
+Mechanism: Ligand binding activates intracellular G proteins, which modulate second messengers (cAMP, IP3, DAG, Ca²⁺)
+Speed: Seconds to minutes
+Structure: 7 transmembrane domains
+Examples:
+Adrenergic receptors (α, β)
+Muscarinic acetylcholine receptors
+Opioid receptors
+Dopamine receptors
+Function: Most common drug targets (~30% of all medications)
+3. Enzyme-Linked Receptors
+
+Mechanism: Ligand binding activates intrinsic or associated enzyme activity
+Speed: Minutes to hours
+Main types:
+Receptor tyrosine kinases (RTKs): Insulin receptor, growth factor receptors (EGF, PDGF)
+Receptor serine/threonine kinases: TGF-β receptors
+Cytokine receptors: Associated with JAK-STAT pathway
+Function: Cell growth, differentiation, metabolism
+4. Nuclear Receptors (Intracellular)
+
+Mechanism: Lipophilic ligands cross membrane and bind intracellular receptors that act as transcription factors
+Speed: Hours to days
+Examples:
+Steroid hormone receptors (glucocorticoids, estrogen, testosterone)
+Thyroid hormone receptors
+Vitamin D receptors
+Function: Gene transcription and long-term cellular changes
+Summary Table
+Receptor Type	Speed	Examples	Primary Mechanism
+Ion channels	Milliseconds	Nicotinic, GABA-A	Ion flux
+GPCRs	Seconds	Adrenergic, muscarinic	G proteins → second messengers
+Enzyme-linked	Minutes-hours	Insulin, growth factors	Protein phosphorylation
+Nuclear	Hours-days	Steroids, thyroid	Gene transcription`,
           copilot: `Cell signalling is the process by which cells detect, interpret, and respond to external signals such as hormones, neurotransmitters, growth factors, or environmental cues. It allows cells to coordinate behaviour, regulate growth, maintain homeostasis, and respond to changes in their surroundings. At its core, signalling begins when an extracellular ligand binds to a cell-surface receptor, triggering intracellular changes through signal transduction pathways.
 
 What cell signalling is
@@ -1375,7 +1449,109 @@ Underlying Biophysical Principle: Electrophoretic Mobility and Molecular Frictio
 The migration speed (v) of a protein through an electric field (E) is determined by its electrophoretic mobility, governed by the classic biophysical equation: mobility = q/f where q is the net electrical charge of the molecule and f is the frictional coefficient.
 Native PAGE: Proteins are kept in their naturally folded state. Separation is determined by a combination of the protein's intrinsic net charge and its native size/shape.
 SDS-PAGE (Denaturing): To separate proteins strictly by their molecular weight, the detergent SDS is added. SDS breaks down non-covalent bonds, unfolding the protein. SDS molecules bind tightly to the protein backbone at a constant ratio (roughly 1.4 grams of SDS per gram of protein). Because SDS is highly negatively charged, it completely overwhelms the protein's intrinsic charge. Every protein ends up with an identical negative charge-to-mass ratio and a uniform linear shape. Separation becomes entirely dependent on the frictional coefficient—smaller chains easily slip through the polyacrylamide mesh and migrate faster toward the positive anode, while larger chains are held back.`,
-          claude: `[Insert Claude response to "What are the key techniques used to separate proteins, and what biophysical principles underlie affinity chromatography, size-exclusion chromatography, and polyacrylamide gel electrophoresis (PAGE)?"]`,
+          claude: `Key Techniques for Protein Separation
+Overview of Main Separation Techniques
+Proteins can be separated based on different properties:
+Charge: Ion exchange chromatography, isoelectric focusing
+Size: Size-exclusion chromatography (SEC), PAGE
+Hydrophobicity: Hydrophobic interaction chromatography, reverse-phase chromatography
+Specific binding: Affinity chromatography
+Mass: Mass spectrometry
+1. Affinity Chromatography
+Principle
+
+Exploits specific, reversible binding between a protein and a ligand immobilized on a solid matrix.
+Biophysical Basis
+
+Based on molecular recognition (lock-and-key or induced fit)
+Binding interactions: hydrogen bonds, electrostatic interactions, van der Waals forces, hydrophobic effects
+High specificity: Only proteins with affinity for the ligand bind
+Process
+
+Loading: Sample applied; target protein binds to ligand
+Washing: Non-binding proteins removed
+Elution: Target protein released by:
+Competitive displacement (free ligand)
+pH change
+Ionic strength change
+Denaturing conditions
+Examples
+
+His-tag purification: Ni²⁺ or Co²⁺ beads bind polyhistidine tags
+Antibody affinity: Protein A/G binds antibodies
+Enzyme-substrate: Immobilized substrate binds specific enzyme
+Receptor-ligand: Hormone receptor binds specific hormone
+Advantages
+
+Very high selectivity
+Single-step purification possible
+High yield and purity
+2. Size-Exclusion Chromatography (SEC/Gel Filtration)
+Principle
+
+Separates proteins based on molecular size and shape (hydrodynamic radius).
+Biophysical Basis
+
+Porous beads (cross-linked dextran, agarose, or polyacrylamide) with defined pore sizes
+Differential diffusion:
+Large proteins: Excluded from pores, travel in void volume → elute first
+Small proteins: Enter pores, longer path → elute later
+Medium proteins: Partial pore access → intermediate elution
+Partition Coefficient (Kav)
+
+Describes distribution between mobile and stationary phases
+Determines elution volume relative to molecular size
+Process
+
+Isocratic elution (constant buffer)
+No binding to matrix
+Separation order: Large → Small
+Applications
+
+Determining molecular weight
+Protein desalting/buffer exchange
+Separating monomers from aggregates
+Analyzing protein complexes
+Advantages
+
+Gentle, native conditions
+Predictable elution
+Good for removing salts/small molecules
+Limitations
+
+Limited resolution
+Separation based on shape, not just mass
+Dilutes sample
+3. Polyacrylamide Gel Electrophoresis (PAGE)
+Principle
+
+Separates proteins by charge and size in an electric field through a polymer gel matrix.
+Biophysical Basis
+
+Electric Field
+
+Charged proteins migrate toward opposite electrode
+Migration rate depends on charge-to-mass ratio
+Gel Matrix (Molecular Sieving)
+
+Polyacrylamide: Cross-linked polymer creates porous network
+Pore size controlled by acrylamide concentration (4-20%)
+Acts as molecular sieve - smaller proteins migrate faster through pores
+Two Main Types
+
+A. Native PAGE
+
+Proteins in native state
+Separation by charge and size
+Maintains protein function
+Migration = f(charge, size, shape)
+B. SDS-PAGE (Most Common)
+
+Principle:
+SDS (sodium dodecyl sulfate): Anionic detergent
+Denatures proteins and coats them uniformly with negative charge
+Charge becomes proportional to mass
+All proteins have similar charge-to-mass ratio`,
           copilot: `Protein separation relies on differences in biophysical properties such as charge, size, shape, and binding interactions. The three techniques you mention — affinity chromatography, size-exclusion chromatography, and polyacrylamide gel electrophoresis (PAGE) — are foundational because each isolates proteins based on a different physical principle.
 Takeaway:
 Affinity chromatography separates by specific binding interactions.
@@ -1519,7 +1695,77 @@ Depolarization: A stimulus triggers voltage-gated Na+ channels to open. Na+ rush
 Repolarization: Na+ channels inactivate. Voltage-gated K+ channels open slowly. K+ rushes out, driving the potential back down.
 Hyperpolarization: K+ channels are slow to close, so potential temporarily drops below resting.
 Return to Rest: The Na+/K+ pump restores the original equilibrium.`,
-          claude: `[Insert Claude response to "What are membrane potentials and action potentials, and how do the Nernst and Goldman equations describe the role of ions in generating electrical signals in excitable cells?"]`,
+          claude: `Membrane Potentials and Action Potentials
+Membrane Potential
+Definition
+
+The electrical potential difference across the cell membrane, typically -70 mV (inside negative) in resting neurons.
+Origin
+
+Generated by:
+Unequal ion distribution across the membrane (maintained by Na⁺/K⁺-ATPase)
+Selective membrane permeability to different ions
+Concentration gradients of key ions
+Key Ion Distributions (Typical Neuron)
+
+Ion	Intracellular	Extracellular	Gradient
+K⁺	~140 mM	~5 mM	High inside
+Na⁺	~12 mM	~145 mM	High outside
+Cl⁻	~4 mM	~110 mM	High outside
+Ca²⁺	~0.0001 mM	~2 mM	High outside
+The Nernst Equation
+What It Describes
+
+The equilibrium potential for a single ion - the membrane potential at which electrical and chemical forces balance for that ion.
+The Equation
+
+E_ion = (RT/zF) × ln([ion]_out/[ion]_in)
+Or at 37°C (simplified):
+E_ion = (61/z) × log₁₀([ion]_out/[ion]_in) mV
+Where:
+E_ion = equilibrium potential for the ion
+R = gas constant
+T = absolute temperature
+z = valence of ion (+1 for K⁺, Na⁺; +2 for Ca²⁺; -1 for Cl⁻)
+F = Faraday constant
+[ion]_out/in = ion concentrations
+Calculated Equilibrium Potentials
+
+E_K ≈ -90 mV (potassium)
+E_Na ≈ +60 mV (sodium)
+E_Ca ≈ +120 mV (calcium)
+E_Cl ≈ -70 mV (chloride)
+Key Concept
+
+If membrane were permeable to only K⁺, the resting potential would be -90 mV
+If membrane were permeable to only Na⁺, it would be +60 mV
+The actual resting potential (-70 mV) reflects mixed permeability
+The Goldman-Hodgkin-Katz (GHK) Equation
+What It Describes
+
+The actual membrane potential when the membrane is permeable to multiple ions simultaneously.
+The Equation
+
+V_m = (RT/F) × ln[(P_K[K⁺]_out + P_Na[Na⁺]_out + P_Cl[Cl⁻]_in) / (P_K[K⁺]_in + P_Na[Na⁺]_in + P_Cl[Cl⁻]_out)]
+Where:
+V_m = membrane potential
+P_K, P_Na, P_Cl = relative permeabilities of each ion
+Key Concept
+
+Membrane potential is a weighted average of equilibrium potentials
+Weighting depends on relative permeability of each ion
+The ion with highest permeability has greatest influence
+At Rest
+
+P_K : P_Na : P_Cl ≈ 1 : 0.04 : 0.45
+K⁺ permeability dominates → V_m ≈ -70 mV (closer to E_K than E_Na)
+Action Potentials
+Definition
+
+Rapid, transient, self-propagating electrical signals in excitable cells (neurons, muscle).
+Phases of Action Potential
+
+1. Resting State (-70 mV)`,
           copilot: `Membrane potentials and action potentials are the electrical signals that allow excitable cells—such as neurons and muscle cells—to communicate. They arise from ion concentration gradients and selective membrane permeability, and the Nernst and Goldman-Hodgkin-Katz (GHK) equations describe how individual ions contribute to these voltages.
 Takeaway:
 Membrane potential = voltage difference across the cell membrane created by unequal ion distributions.
